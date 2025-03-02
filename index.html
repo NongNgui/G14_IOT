@@ -4,14 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hacker Terminal</title>
-    <meta name="Description" content="A Hi-Tech Hacker Themed Serial Terminal">
-    
+
     <!-- Import Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
 
     <style>
         * {
-            background-color: #0a0a0a;
+            background-color: #000;
             font-family: 'VT323', monospace;
             color: #00ff00;
             padding: 0;
@@ -22,6 +21,7 @@
         body {
             text-align: center;
             padding: 20px;
+            overflow: hidden;
         }
 
         h1 {
@@ -29,6 +29,13 @@
             color: #00ff00;
             text-shadow: 0 0 10px #00ff00;
             margin-bottom: 20px;
+            animation: glitch 1s infinite;
+        }
+
+        @keyframes glitch {
+            0% { text-shadow: 2px 2px #ff0000, -2px -2px #00ff00; }
+            50% { text-shadow: -2px -2px #ff0000, 2px 2px #00ff00; }
+            100% { text-shadow: 2px 2px #ff0000, -2px -2px #00ff00; }
         }
 
         button {
@@ -76,27 +83,37 @@
             box-shadow: 0 0 10px #00ff00;
         }
 
-        /* Scanline Effect */
-        @keyframes scanline {
-            0% { opacity: 0.2; }
-            50% { opacity: 1; }
-            100% { opacity: 0.2; }
-        }
-
-        .scanline {
+        /* The Matrix Rain Effect */
+        .matrix {
             position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
-            background: repeating-linear-gradient(0deg, rgba(0, 255, 0, 0.1) 0px, rgba(0, 255, 0.1) 1px, transparent 2px);
-            animation: scanline 2s infinite;
+            background: rgba(0, 0, 0, 0.9);
+            overflow: hidden;
             z-index: -1;
+        }
+
+        .matrix span {
+            position: absolute;
+            top: -10px;
+            color: rgba(0, 255, 0, 0.8);
+            font-size: 20px;
+            font-family: monospace;
+            animation: fall linear infinite;
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(100vh); opacity: 0; }
         }
     </style>
 </head>
 <body>
-    <div class="scanline"></div>
+    <div class="matrix"></div>
     <h1>Hacker Terminal</h1>
-    
+
     <button onclick="connectSerial()">Connect</button>
     <button onclick="serialResultsDiv.innerHTML = '';">Clear</button>
 
@@ -167,6 +184,23 @@
                 serialResultsDiv.scrollTop = serialResultsDiv.scrollHeight;
             }
         }
+
+        function generateMatrixEffect() {
+            const matrix = document.querySelector(".matrix");
+            for (let i = 0; i < 100; i++) {
+                const span = document.createElement("span");
+                span.innerText = Math.random() > 0.5 ? "1" : "0";
+                span.style.left = Math.random() * 100 + "vw";
+                span.style.animationDuration = Math.random() * 2 + 2 + "s";
+                span.style.animationDelay = Math.random() * 3 + "s";
+                matrix.appendChild(span);
+
+                setTimeout(() => {
+                    span.remove();
+                }, 5000);
+            }
+        }
+        setInterval(generateMatrixEffect, 300);
     </script>
 </body>
 </html>
