@@ -22,12 +22,15 @@
             text-align: center;
             padding: 20px;
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
         }
 
         h1 {
             font-size: 30px;
             text-shadow: 0 0 10px #00ff00;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
             animation: glitch 1s infinite;
             position: relative;
             z-index: 10;
@@ -68,7 +71,7 @@
             padding: 5px;
             font-size: 16px;
             text-align: center;
-            width: 150px;
+            width: 60%;
             box-shadow: 0 0 5px #00ff00;
             position: relative;
             z-index: 10;
@@ -77,13 +80,12 @@
         #serialResults {
             font-family: 'VT323', monospace;
             white-space: pre;
-            height: 300px;
-            width: 90%;
-            border: 2px solid #00ff00;
-            overflow: auto;
+            flex-grow: 1;
+            width: 100%;
+            border-top: 2px solid #00ff00;
+            overflow-y: auto;
             background-color: black;
             padding: 10px;
-            margin: 20px auto;
             text-align: left;
             box-shadow: 0 0 10px #00ff00;
             position: relative;
@@ -100,6 +102,14 @@
             z-index: 0;
             pointer-events: none;
         }
+
+        .input-container {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
@@ -109,31 +119,10 @@
     <button onclick="connectSerial()">Connect</button>
     <button onclick="serialResultsDiv.innerHTML = '';">Clear</button>
 
-    <br><br>
-    Baud Rate:
-    <input type="text" id="baud" list="baudList" onclick="this.value = ''" onchange="localStorage.baud = this.value">
-    <datalist id="baudList">
-        <option value="110">110</option>
-        <option value="300">300</option>
-        <option value="600">600</option>
-        <option value="1200">1200</option>
-        <option value="2400">2400</option>
-        <option value="4800">4800</option>
-        <option value="9600">9600</option>
-        <option value="14400">14400</option>
-        <option value="19200">19200</option>
-        <option value="38400">38400</option>
-        <option value="57600">57600</option>
-        <option value="115200">115200</option>
-        <option value="128000">128000</option>
-        <option value="256000">256000</option>
-    </datalist>
+    <div class="input-container">
+        <input type="text" id="lineToSend" placeholder="Type command... (Press Enter to send)">
+    </div>
 
-    <br><br>
-    <input type="text" id="lineToSend" placeholder="Type command..." style="width:calc(60%)">
-    <button onclick="sendSerialLine()">Send</button>
-
-    <br>
     <div id="serialResults"></div>
 
     <script>
@@ -143,7 +132,7 @@
         async function connectSerial() {
             try {
                 port = await navigator.serial.requestPort();
-                await port.open({ baudRate: document.getElementById("baud").value });
+                await port.open({ baudRate: 9600 });
 
                 textEncoder = new TextEncoderStream();
                 writableStreamClosed = textEncoder.readable.pipeTo(port.writable);
@@ -155,10 +144,12 @@
         }
 
         async function sendSerialLine() {
-            let dataToSend = document.getElementById("lineToSend").value + "\n";
-            serialResultsDiv.innerHTML += "> " + dataToSend;
-            await writer.write(dataToSend);
+            let dataToSend = document.getElementById("lineToSend").value;
+            if (dataToSend.trim() === "") return;
+            serialResultsDiv.innerHTML += "> " + dataToSend + "\n";
+            await writer.write(dataToSend + "\n");
             document.getElementById("lineToSend").value = "";
+            serialResultsDiv.scrollTop = serialResultsDiv.scrollHeight; // Auto-scroll down
         }
 
         async function listenToPort() {
@@ -173,9 +164,15 @@
                     break;
                 }
                 serialResultsDiv.innerHTML += value;
-                serialResultsDiv.scrollTop = serialResultsDiv.scrollHeight;
+                serialResultsDiv.scrollTop = serialResultsDiv.scrollHeight; // Auto-scroll down
             }
         }
+
+        document.getElementById("lineToSend").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                sendSerialLine();
+            }
+        });
 
         /* Matrix Rain Effect */
         const canvas = document.getElementById("matrixCanvas");
@@ -188,11 +185,11 @@
         const matrix = letters.split("");
 
         const fontSize = 16;
-        const columns = canvas.width / fontSize;
+        const columns = Math.floor(canvas.width / fontSize);
 
         const drops = [];
-        for (let x = 0; x < columns; x++) {
-            drops[x] = 1;
+        for (let i = 0; i < columns; i++) {
+            drops[i] = Math.floor(Math.random() * canvas.height / fontSize);
         }
 
         function drawMatrix() {
