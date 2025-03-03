@@ -165,13 +165,7 @@
           <option value="128000">128000</option>
           <option value="256000">256000</option>
         </datalist>
-        <input
-          type="text"
-          id="lineToSend"
-          list="commandList"
-          placeholder="Type command..."
-        />
-        <datalist id="commandList"></datalist>
+        <input type="text" id="lineToSend"list="commandList" placeholder="Type command..." />
         <button onclick="sendSerialLine()">Send</button>
         <button onclick="connectSerial()">Connect</button>
         <button onclick="serialResultsDiv.innerHTML = '';">Clear</button>
@@ -181,6 +175,18 @@
     </div>
 
     <script>
+      const commands = [
+        "ls",
+        "cd",
+        "mkdir",
+        "rm",
+        "ping",
+        "echo",
+        "cat",
+        "chmod",
+        "help"
+      ];
+
       const canvas = document.getElementById("matrixCanvas");
       const ctx = canvas.getContext("2d");
 
@@ -246,51 +252,35 @@
       }
 
       async function listenToPort() {
-        const textDecoder = new TextDecoderStream();
-        const readableStreamClosed = port.readable.pipeTo(textDecoder.writable);
-        const reader = textDecoder.readable.getReader();
+    const textDecoder = new TextDecoderStream();
+    const readableStreamClosed = port.readable.pipeTo(textDecoder.writable);
+    const reader = textDecoder.readable.getReader();
 
-        while (true) {
-          const { value, done } = await reader.read();
-          if (done) {
+    while (true) {
+        const { value, done } = await reader.read();
+        if (done) {
             reader.releaseLock();
             break;
-          }
-          serialResultsDiv.innerHTML += value;
-          serialResultsDiv.scrollTop = serialResultsDiv.scrollHeight;
-
-          // ดึงคำสั่งจาก Serial และอัปเดต AutoComplete
-          let newCommands = value
-            .trim()
-            .split("\n")
-            .map((cmd) => cmd.trim())
-            .filter((cmd) => !cmd.includes(" "));
-          commands.push(...newCommands);
-          commands = [...new Set(commands)];
-
-          // อัปเดต datalist
-          let datalist = document.getElementById("commandList");
-          datalist.innerHTML = "";
-          commands.forEach((cmd) => {
-            let option = document.createElement("option");
-            option.value = cmd;
-            datalist.appendChild(option);
-          });
         }
-      }
+        serialResultsDiv.innerHTML += value;
+        serialResultsDiv.scrollTop = serialResultsDiv.scrollHeight;
 
-      document
-        .getElementById("lineToSend")
-        .addEventListener("keydown", function (event) {
-          if (event.key === "Tab") {
-            event.preventDefault();
-            let userInput = this.value.toLowerCase();
-            let match = commands.find((cmd) => cmd.startsWith(userInput));
-            if (match) {
-              this.value = match;
-            }
-          }
-        });
+        // ดึงคำสั่งจาก Serial และอัปเดต AutoComplete
+        let newCommands = value.trim().split("\n").map(cmd => cmd.trim()).filter(cmd => !cmd.includes(" "));
+        commands.push(...newCommands);
+        commands = [...new Set(commands)];
+    }
+}
+document.getElementById("lineToSend").addEventListener("keydown", function(event) {
+    if (event.key === "Tab") {
+        event.preventDefault();
+        let userInput = this.value.toLowerCase();
+        let match = commands.find(cmd => cmd.startsWith(userInput));
+        if (match) {
+            this.value = match;
+        }
+    }
+});
     </script>
   </body>
 </html>
