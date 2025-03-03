@@ -174,107 +174,120 @@
         <button onclick="sendSerialLine()">Send</button>
         <button onclick="connectSerial()">Connect</button>
         <button onclick="serialResultsDiv.innerHTML = '';">Clear</button>
-        <br /><br /><br />  
+        <br /><br /><br />
       </div>
       <div id="serialResults"></div>
     </div>
 
     <script>
-const commands = {
-    "scanap": [],
-    "scansta": [],
-    "stopscan": [],
-    "list": ["-a", "-s", "-c"],
-    "reboot": [],
-    "attack": ["-t beacon -l", "-t beacon -r", "-t beacon -a", "-t deauth", "-t deauth -c", "-t probe"],
-    "blespam": ["-t all", "-t apple", "-t samsung", "-t windows"],
-    "btwardrive": [],
-    "channel": ["-s", ""],
-    "clearlist": ["-a", "-s", "-c"],
-    "evilportal": ["-c start", "-c sethtml apple.html", "-c start -w CoxWifi.html"],
-    "gpsdata": [],
-    "help": [],
-    "led": ["-s", "-p rainbow"],
-    "listap": ["-a", "-s", "-c", "-t"],
-    "load": ["-a", "-s"],
-    "save": ["-a", "-s"],
-    "select": ["-a", "-a all", "-c", "-a -f"],
-    "settings": ["", "-s", "-r"],
-    "sigmon": [],
-    "sniffbt": ["[-t]"],
-    "sniffbeacon": [],
-    "sniffdeauth": [],
-    "sniffesp": [],
-    "sniffpmkid": [],
-    "sniffpwn": [],
-    "spoofat": ["-t"],
-    "ssid": ["-a -g", "-a -n", "-r"],
-    "update": ["-s/"],
-    "wardrive": ["[-s]"]
-};
+      const commands = {
+        scanap: [],
+        scansta: [],
+        stopscan: [],
+        list: ["-a", "-s", "-c"],
+        reboot: [],
+        attack: [
+          "-t beacon -l",
+          "-t beacon -r",
+          "-t beacon -a",
+          "-t deauth",
+          "-t deauth -c",
+          "-t probe",
+        ],
+        blespam: ["-t all", "-t apple", "-t samsung", "-t windows"],
+        btwardrive: [],
+        channel: ["-s", ""],
+        clearlist: ["-a", "-s", "-c"],
+        evilportal: [
+          "-c start",
+          "-c sethtml apple.html",
+          "-c start -w CoxWifi.html",
+        ],
+        gpsdata: [],
+        help: [],
+        led: ["-s", "-p rainbow"],
+        listap: ["-a", "-s", "-c", "-t"],
+        load: ["-a", "-s"],
+        save: ["-a", "-s"],
+        select: ["-a", "-a all", "-c", "-a -f"],
+        settings: ["", "-s", "-r"],
+        sigmon: [],
+        sniffbt: ["[-t]"],
+        sniffbeacon: [],
+        sniffdeauth: [],
+        sniffesp: [],
+        sniffpmkid: [],
+        sniffpwn: [],
+        spoofat: ["-t"],
+        ssid: ["-a -g", "-a -n", "-r"],
+        update: ["-s/"],
+        wardrive: ["[-s]"],
+      };
 
-let tabIndex = 0;
-let lastBaseCommand = "";
-let baseCommandList = Object.keys(commands); // รายการคำสั่งหลัก
-let isSelectingBaseCommand = true; // ตรวจสอบว่าอยู่ในโหมดเลือกคำสั่งหลักหรือเลือกอาร์กิวเมนต์
+      let tabIndex = 0;
+      let lastCommand = "";
+      let lastArguments = [];
+      let baseCommandList = Object.keys(commands);
 
-async function sendSerialLine() {
-    let dataToSend = document.getElementById("lineToSend").value;
-    if (dataToSend.trim() === "") return;
-    serialResultsDiv.innerHTML += "> " + dataToSend + "\n";
-    await writer.write(dataToSend + "\n");
-    document.getElementById("lineToSend").value = "";
-    serialResultsDiv.scrollTop = serialResultsDiv.scrollHeight;
-    tabIndex = 0;
-    isSelectingBaseCommand = true; // รีเซ็ตให้เลือกคำสั่งหลักใหม่
-}
-
-document.getElementById("lineToSend").addEventListener("keydown", function (event) {
-    if (event.key === "Tab") {
-        event.preventDefault();
-        let userInput = this.value.trim().split(" ");
-        let baseCommand = userInput[0].toLowerCase();
-        let argument = userInput.slice(1).join(" ");
-
-        if (isSelectingBaseCommand) {
-            // วนลูปเลือกคำสั่งหลัก
-            if (tabIndex >= baseCommandList.length) {
-                tabIndex = 0;
-            }
-            this.value = baseCommandList[tabIndex]; // อัปเดต input เป็นคำสั่งที่เลือก
-            lastBaseCommand = baseCommandList[tabIndex]; // บันทึกคำสั่งหลักที่เลือก
-            tabIndex++;
-            if (commands[lastBaseCommand].length > 0) {
-                isSelectingBaseCommand = false; // ถ้ามีอาร์กิวเมนต์ เปลี่ยนไปเลือกอาร์กิวเมนต์
-                tabIndex = 0;
-            }
-        } else {
-            // วนลูปเลือกอาร์กิวเมนต์
-            let options = commands[lastBaseCommand];
-
-            if (tabIndex >= options.length) {
-                tabIndex = 0;
-            }
-            this.value = lastBaseCommand + " " + options[tabIndex]; // อัปเดต input เป็นคำสั่ง + อาร์กิวเมนต์
-            tabIndex++;
-        }
-    }
-
-    if (event.key === " ") {
+      async function sendSerialLine() {
+        let dataToSend = document.getElementById("lineToSend").value;
+        if (dataToSend.trim() === "") return;
+        serialResultsDiv.innerHTML += "> " + dataToSend + "\n";
+        await writer.write(dataToSend + "\n");
+        document.getElementById("lineToSend").value = "";
+        serialResultsDiv.scrollTop = serialResultsDiv.scrollHeight;
         tabIndex = 0;
-        isSelectingBaseCommand = false; // กด Space เพื่อหยุดเลือกอัตโนมัติ
-    }
+        lastCommand = "";
+        lastArguments = [];
+      }
 
-    if (event.key === "Enter") {
-        event.preventDefault();
-        sendSerialLine();
-        this.value = "";
-        tabIndex = 0;
-        isSelectingBaseCommand = true; // รีเซ็ตให้เลือกคำสั่งหลักใหม่
-    }
-});
+      document
+        .getElementById("lineToSend")
+        .addEventListener("keydown", function (event) {
+          if (event.key === "Tab") {
+            event.preventDefault();
+            let inputParts = this.value.trim().split(" ");
+            let baseCommand = inputParts[0].toLowerCase();
+            let currentArgs = inputParts.slice(1);
 
+            if (this.value === "" || !commands[baseCommand]) {
+              // ถ้ายังไม่ได้พิมพ์อะไร ให้วนลูปเลือกคำสั่งหลัก
+              if (tabIndex >= baseCommandList.length) tabIndex = 0;
+              this.value = baseCommandList[tabIndex];
+              lastCommand = baseCommandList[tabIndex]; // บันทึกคำสั่งหลักที่เลือก
+              tabIndex++;
+              lastArguments = []; // รีเซ็ตอาร์กิวเมนต์
+              return;
+            }
 
+            let options = commands[baseCommand];
+
+            if (options.length > 0) {
+              if (tabIndex >= options.length) tabIndex = 0;
+
+              if (!lastArguments.includes(options[tabIndex])) {
+                lastArguments.push(options[tabIndex]); // เพิ่มอาร์กิวเมนต์ที่เลือก
+              }
+
+              this.value = baseCommand + " " + lastArguments.join(" ");
+              tabIndex++;
+            }
+          }
+
+          if (event.key === " ") {
+            tabIndex = 0;
+            lastArguments = [];
+          }
+
+          if (event.key === "Enter") {
+            event.preventDefault();
+            sendSerialLine();
+            this.value = "";
+            tabIndex = 0;
+            lastCommand = "";
+            lastArguments = [];
+          }
+        });
 
       const canvas = document.getElementById("matrixCanvas");
       const ctx = canvas.getContext("2d");
