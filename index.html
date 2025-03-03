@@ -165,7 +165,12 @@
           <option value="128000">128000</option>
           <option value="256000">256000</option>
         </datalist>
-        <input type="text" id="lineToSend"list="commandList" placeholder="Type command..." />
+        <input
+          type="text"
+          id="lineToSend"
+          list="commandList"
+          placeholder="Type command..."
+        />
         <button onclick="sendSerialLine()">Send</button>
         <button onclick="connectSerial()">Connect</button>
         <button onclick="serialResultsDiv.innerHTML = '';">Clear</button>
@@ -175,17 +180,97 @@
     </div>
 
     <script>
-      const commands = [
-        "ls",
-        "cd",
-        "mkdir",
-        "rm",
-        "ping",
-        "echo",
-        "cat",
-        "chmod",
-        "help"
-      ];
+      const commands = {
+    "ls": ["-a", "-l", "-h"],
+    "cd": [],
+    "mkdir": ["-p"],
+    "rm": ["-rf", "-i"],
+    "ping": ["-c 4", "-t"],
+    "echo": [],
+    "cat": [],
+    "chmod": ["777", "755"],
+    "help": []
+};
+
+let tabIndex = 0;
+let lastBaseCommand = "";
+
+async function sendSerialLine() {
+    let dataToSend = document.getElementById("lineToSend").value;
+    if (dataToSend.trim() === "") return;
+    serialResultsDiv.innerHTML += "> " + dataToSend + "\n";
+    await writer.write(dataToSend + "\n");
+    document.getElementById("lineToSend").value = "";
+    serialResultsDiv.scrollTop = serialResultsDiv.scrollHeight;
+    tabIndex = 0; // รีเซ็ตตำแหน่งเมื่อส่งคำสั่ง
+}
+
+async function listenToPort() {
+    const textDecoder = new TextDecoderStream();
+    const readableStreamClosed = port.readable.pipeTo(textDecoder.writable);
+    const reader = textDecoder.readable.getReader();
+
+    while (true) {
+        const { value, done } = await reader.read();
+        if (done) {
+            reader.releaseLock();
+            break;
+        }
+        serialResultsDiv.innerHTML += value;
+        serialResultsDiv.scrollTop = serialResultsDiv.scrollHeight;
+
+        let newCommands = value.trim().split("\n").map(cmd => cmd.trim()).filter(cmd => !cmd.includes(" "));
+        newCommands.forEach(cmd => {
+            if (!commands[cmd]) commands[cmd] = [];
+        });
+    }
+}
+
+document.getElementById("lineToSend").addEventListener("keydown", function (event) {
+    if (event.key === "Tab") {
+        event.preventDefault();
+        let userInput = this.value.trim().split(" ");
+        let baseCommand = userInput[0].toLowerCase();
+        let argument = userInput.slice(1).join(" ");
+
+        if (baseCommand !== lastBaseCommand) {
+            tabIndex = 0; // ถ้าเปลี่ยนคำสั่งให้เริ่มนับใหม่
+        }
+        lastBaseCommand = baseCommand;
+
+        if (commands[baseCommand]) {
+            let options = commands[baseCommand];
+
+            if (argument === "" && tabIndex === 0) {
+                this.value = baseCommand;
+                tabIndex++;
+            } else if (options.length > 0) {
+                if (tabIndex > options.length) {
+                    tabIndex = 1; // วนกลับไปอันแรก
+                }
+                this.value = baseCommand + " " + options[tabIndex - 1];
+                tabIndex++;
+            }
+        } else {
+            let match = Object.keys(commands).find(cmd => cmd.startsWith(baseCommand));
+            if (match) {
+                this.value = match;
+            }
+        }
+    }
+
+    if (event.key === " ") {
+        tabIndex = 0; // รีเซ็ตตำแหน่งเมื่อกด Space
+    }
+
+    if (event.key === "Enter") {
+        event.preventDefault();
+        sendSerialLine();
+        this.value = "";
+        tabIndex = 0; // รีเซ็ตตำแหน่งเมื่อส่งคำสั่ง
+    }
+});
+
 
       const canvas = document.getElementById("matrixCanvas");
       const ctx = canvas.getContext("2d");
@@ -241,51 +326,6 @@
           alert("Serial Connection Failed: " + e);
         }
       }
-
-      async function sendSerialLine() {
-        let dataToSend = document.getElementById("lineToSend").value;
-        if (dataToSend.trim() === "") return;
-        serialResultsDiv.innerHTML += "> " + dataToSend + "\n";
-        await writer.write(dataToSend + "\n");
-        document.getElementById("lineToSend").value = "";
-        serialResultsDiv.scrollTop = serialResultsDiv.scrollHeight;
-      }
-
-      async function listenToPort() {
-    const textDecoder = new TextDecoderStream();
-    const readableStreamClosed = port.readable.pipeTo(textDecoder.writable);
-    const reader = textDecoder.readable.getReader();
-
-    while (true) {
-        const { value, done } = await reader.read();
-        if (done) {
-            reader.releaseLock();
-            break;
-        }
-        serialResultsDiv.innerHTML += value;
-        serialResultsDiv.scrollTop = serialResultsDiv.scrollHeight;
-
-        // ดึงคำสั่งจาก Serial และอัปเดต AutoComplete
-        let newCommands = value.trim().split("\n").map(cmd => cmd.trim()).filter(cmd => !cmd.includes(" "));
-        commands.push(...newCommands);
-        commands = [...new Set(commands)];
-    }
-}
-document.getElementById("lineToSend").addEventListener("keydown", function(event) {
-    if (event.key === "Tab") {
-        event.preventDefault();
-        let userInput = this.value.toLowerCase();
-        let match = commands.find(cmd => cmd.startsWith(userInput));
-        if (match) {
-            this.value = match;
-        }
-    }
-    if (event.key === "Enter") {
-        event.preventDefault(); // ป้องกันขึ้นบรรทัดใหม่
-        sendSerialLine();
-        this.value = "";
-    }
-});
     </script>
   </body>
 </html>
