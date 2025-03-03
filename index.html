@@ -180,114 +180,121 @@
     </div>
 
     <script>
-      const commands = {
-        scanap: [],
-        scansta: [],
-        stopscan: [],
-        list: ["-a", "-s", "-c"],
-        reboot: [],
-        attack: [
-          "-t beacon -l",
-          "-t beacon -r",
-          "-t beacon -a",
-          "-t deauth",
-          "-t deauth -c",
-          "-t probe",
-        ],
-        blespam: ["-t all", "-t apple", "-t samsung", "-t windows"],
-        btwardrive: [],
-        channel: ["-s", ""],
-        clearlist: ["-a", "-s", "-c"],
-        evilportal: [
-          "-c start",
-          "-c sethtml apple.html",
-          "-c start -w CoxWifi.html",
-        ],
-        gpsdata: [],
-        help: [],
-        led: ["-s", "-p rainbow"],
-        listap: ["-a", "-s", "-c", "-t"],
-        load: ["-a", "-s"],
-        save: ["-a", "-s"],
-        select: ["-a", "-a all", "-c", "-a -f"],
-        settings: ["", "-s", "-r"],
-        sigmon: [],
-        sniffbt: ["[-t]"],
-        sniffbeacon: [],
-        sniffdeauth: [],
-        sniffesp: [],
-        sniffpmkid: [],
-        sniffpwn: [],
-        spoofat: ["-t"],
-        ssid: ["-a -g", "-a -n", "-r"],
-        update: ["-s/"],
-        wardrive: ["[-s]"],
-      };
+     const commands = {
+    scanap: [],
+    scansta: [],
+    stopscan: [],
+    list: ["-a", "-s", "-c"],
+    reboot: [],
+    attack: [
+        "-t beacon -l",
+        "-t beacon -r",
+        "-t beacon -a",
+        "-t deauth",
+        "-t deauth -c",
+        "-t probe",
+    ],
+    blespam: ["-t all", "-t apple", "-t samsung", "-t windows"],
+    btwardrive: [],
+    channel: ["-s", ""],
+    clearlist: ["-a", "-s", "-c"],
+    evilportal: ["-c start", "-c sethtml apple.html", "-c start -w CoxWifi.html"],
+    gpsdata: [],
+    help: [],
+    led: ["-s", "-p rainbow"],
+    listap: ["-a", "-s", "-c", "-t"],
+    load: ["-a", "-s"],
+    save: ["-a", "-s"],
+    select: ["-a", "-a all", "-c", "-a -f"],
+    settings: ["", "-s", "-r"],
+    sigmon: [],
+    sniffbt: ["[-t]"],
+    sniffbeacon: [],
+    sniffdeauth: [],
+    sniffesp: [],
+    sniffpmkid: [],
+    sniffpwn: [],
+    spoofat: ["-t"],
+    ssid: ["-a -g", "-a -n", "-r"],
+    update: ["-s/"],
+    wardrive: ["[-s]"],
+};
 
-      let tabIndex = 0;
-      let lastCommand = "";
-      let lastArguments = [];
-      let baseCommandList = Object.keys(commands);
+let tabIndex = 0;
+let lastCommand = "";
+let baseCommandList = Object.keys(commands);
 
-      async function sendSerialLine() {
-        let dataToSend = document.getElementById("lineToSend").value;
-        if (dataToSend.trim() === "") return;
-        serialResultsDiv.innerHTML += "> " + dataToSend + "\n";
-        await writer.write(dataToSend + "\n");
-        document.getElementById("lineToSend").value = "";
+async function sendSerialLine() {
+    let dataToSend = document.getElementById("lineToSend").value;
+    if (dataToSend.trim() === "") return;
+    serialResultsDiv.innerHTML += "> " + dataToSend + "\n";
+    await writer.write(dataToSend + "\n");
+    document.getElementById("lineToSend").value = "";
+    serialResultsDiv.scrollTop = serialResultsDiv.scrollHeight;
+    tabIndex = 0;
+    lastCommand = "";
+}
+
+async function listenToPort() {
+    const textDecoder = new TextDecoderStream();
+    const readableStreamClosed = port.readable.pipeTo(textDecoder.writable);
+    const reader = textDecoder.readable.getReader();
+
+    while (true) {
+        const { value, done } = await reader.read();
+        if (done) {
+            reader.releaseLock();
+            break;
+        }
+        serialResultsDiv.innerHTML += value;
         serialResultsDiv.scrollTop = serialResultsDiv.scrollHeight;
+
+        let newCommands = value.trim().split("\n").map(cmd => cmd.trim()).filter(cmd => !cmd.includes(" "));
+        newCommands.forEach(cmd => {
+            if (!commands[cmd]) commands[cmd] = [];
+        });
+    }
+}
+
+document.getElementById("lineToSend").addEventListener("keydown", function (event) {
+    if (event.key === "Tab") {
+        event.preventDefault();
+        let inputParts = this.value.trim().split(" ");
+        let baseCommand = inputParts[0].toLowerCase();
+        let currentArgs = inputParts.slice(1);
+
+        // ถ้ายังไม่มี baseCommand ให้เลือกก่อน
+        if (this.value === "" || !commands[baseCommand]) {
+            if (tabIndex >= baseCommandList.length) tabIndex = 0;
+            this.value = baseCommandList[tabIndex];
+            lastCommand = baseCommandList[tabIndex];
+            tabIndex++;
+            return;
+        }
+
+        let options = commands[baseCommand];
+
+        if (options.length > 0) {
+            if (tabIndex >= options.length) tabIndex = 0; // วนลูปอาร์กิวเมนต์
+
+            this.value = baseCommand + " " + options[tabIndex]; // ใช้ prefix เดิม + สลับ args
+            tabIndex++;
+        }
+    }
+
+    if (event.key === " ") {
+        tabIndex = 0;
+    }
+
+    if (event.key === "Enter") {
+        event.preventDefault();
+        sendSerialLine();
+        this.value = "";
         tabIndex = 0;
         lastCommand = "";
-        lastArguments = [];
-      }
+    }
+});
 
-      document
-        .getElementById("lineToSend")
-        .addEventListener("keydown", function (event) {
-          if (event.key === "Tab") {
-            event.preventDefault();
-            let inputParts = this.value.trim().split(" ");
-            let baseCommand = inputParts[0].toLowerCase();
-            let currentArgs = inputParts.slice(1);
-
-            if (this.value === "" || !commands[baseCommand]) {
-              // ถ้ายังไม่ได้พิมพ์อะไร ให้วนลูปเลือกคำสั่งหลัก
-              if (tabIndex >= baseCommandList.length) tabIndex = 0;
-              this.value = baseCommandList[tabIndex];
-              lastCommand = baseCommandList[tabIndex]; // บันทึกคำสั่งหลักที่เลือก
-              tabIndex++;
-              lastArguments = []; // รีเซ็ตอาร์กิวเมนต์
-              return;
-            }
-
-            let options = commands[baseCommand];
-
-            if (options.length > 0) {
-              if (tabIndex >= options.length) tabIndex = 0;
-
-              if (!lastArguments.includes(options[tabIndex])) {
-                lastArguments.push(options[tabIndex]); // เพิ่มอาร์กิวเมนต์ที่เลือก
-              }
-
-              this.value = baseCommand + " " + lastArguments.join(" ");
-              tabIndex++;
-            }
-          }
-
-          if (event.key === " ") {
-            tabIndex = 0;
-            lastArguments = [];
-          }
-
-          if (event.key === "Enter") {
-            event.preventDefault();
-            sendSerialLine();
-            this.value = "";
-            tabIndex = 0;
-            lastCommand = "";
-            lastArguments = [];
-          }
-        });
 
       const canvas = document.getElementById("matrixCanvas");
       const ctx = canvas.getContext("2d");
