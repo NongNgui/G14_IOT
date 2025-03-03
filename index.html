@@ -280,6 +280,11 @@ document.getElementById("lineToSend").addEventListener("keydown", function(event
             this.value = match;
         }
     }
+    if (event.key === "Enter") {
+        event.preventDefault(); // ป้องกันขึ้นบรรทัดใหม่
+        sendSerialLine();
+        this.value = "";
+    }
 });
     </script>
   </body>
