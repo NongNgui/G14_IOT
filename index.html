@@ -216,6 +216,7 @@ const commands = {
 let tabIndex = 0;
 let lastBaseCommand = "";
 let baseCommandList = Object.keys(commands); // รายการคำสั่งหลัก
+let isSelectingBaseCommand = true; // ตรวจสอบว่าอยู่ในโหมดเลือกคำสั่งหลักหรือเลือกอาร์กิวเมนต์
 
 async function sendSerialLine() {
     let dataToSend = document.getElementById("lineToSend").value;
@@ -224,7 +225,8 @@ async function sendSerialLine() {
     await writer.write(dataToSend + "\n");
     document.getElementById("lineToSend").value = "";
     serialResultsDiv.scrollTop = serialResultsDiv.scrollHeight;
-    tabIndex = 0; // รีเซ็ตตำแหน่งเมื่อส่งคำสั่ง
+    tabIndex = 0;
+    isSelectingBaseCommand = true; // รีเซ็ตให้เลือกคำสั่งหลักใหม่
 }
 
 document.getElementById("lineToSend").addEventListener("keydown", function (event) {
@@ -234,46 +236,41 @@ document.getElementById("lineToSend").addEventListener("keydown", function (even
         let baseCommand = userInput[0].toLowerCase();
         let argument = userInput.slice(1).join(" ");
 
-        // ถ้ายังไม่มีคำสั่ง ให้วนลูปเลือกคำสั่งหลัก
-        if (baseCommand === "") {
+        if (isSelectingBaseCommand) {
+            // วนลูปเลือกคำสั่งหลัก
             if (tabIndex >= baseCommandList.length) {
-                tabIndex = 0; // วนกลับไปคำสั่งแรก
+                tabIndex = 0;
             }
-            this.value = baseCommandList[tabIndex]; // กำหนดค่า input เป็นคำสั่งที่ tab ไปถึง
+            this.value = baseCommandList[tabIndex]; // อัปเดต input เป็นคำสั่งที่เลือก
+            lastBaseCommand = baseCommandList[tabIndex]; // บันทึกคำสั่งหลักที่เลือก
             tabIndex++;
-            return;
-        }
-
-        if (baseCommand !== lastBaseCommand) {
-            tabIndex = 0; // ถ้าเปลี่ยนคำสั่งให้รีเซ็ต index
-        }
-        lastBaseCommand = baseCommand;
-
-        if (commands[baseCommand]) {
-            let options = commands[baseCommand];
-
-            if (argument === "" && tabIndex === 0) {
-                this.value = baseCommand;
-                tabIndex++;
-            } else if (options.length > 0) {
-                if (tabIndex > options.length) {
-                    tabIndex = 1; // วนกลับไปอาร์กิวเมนต์แรก
-                }
-                this.value = baseCommand + " " + options[tabIndex - 1];
-                tabIndex++;
+            if (commands[lastBaseCommand].length > 0) {
+                isSelectingBaseCommand = false; // ถ้ามีอาร์กิวเมนต์ เปลี่ยนไปเลือกอาร์กิวเมนต์
+                tabIndex = 0;
             }
+        } else {
+            // วนลูปเลือกอาร์กิวเมนต์
+            let options = commands[lastBaseCommand];
+
+            if (tabIndex >= options.length) {
+                tabIndex = 0;
+            }
+            this.value = lastBaseCommand + " " + options[tabIndex]; // อัปเดต input เป็นคำสั่ง + อาร์กิวเมนต์
+            tabIndex++;
         }
     }
 
     if (event.key === " ") {
-        tabIndex = 0; // รีเซ็ตตำแหน่งเมื่อกด Space
+        tabIndex = 0;
+        isSelectingBaseCommand = false; // กด Space เพื่อหยุดเลือกอัตโนมัติ
     }
 
     if (event.key === "Enter") {
         event.preventDefault();
         sendSerialLine();
         this.value = "";
-        tabIndex = 0; // รีเซ็ตตำแหน่งเมื่อส่งคำสั่ง
+        tabIndex = 0;
+        isSelectingBaseCommand = true; // รีเซ็ตให้เลือกคำสั่งหลักใหม่
     }
 });
 
