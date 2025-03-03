@@ -1,255 +1,296 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Hacker Terminal</title>
 
     <!-- Import Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <link
+      href="https://fonts.googleapis.com/css2?family=VT323&display=swap"
+      rel="stylesheet"
+    />
 
     <style>
-        * {
-            background-color: black;
-            font-family: 'VT323', monospace;
-            color: #00ff00;
-            padding: 0;
-            margin: 0;
-            box-sizing: border-box;
+      * {
+        background-color: black;
+        font-family: "VT323", monospace;
+        color: #00ff00;
+        padding: 0;
+        margin: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        text-align: center;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+      }
+
+      h1 {
+        font-size: 50px; /* ขยายขนาดตัวอักษร */
+        text-shadow: 0 0 15px #00ff00, 0 0 30px #00ff00, 0 0 45px #00ff00; /* เอฟเฟกต์แสงนีออน */
+        animation: glitch 1s infinite;
+        position: relative;
+        z-index: 10;
+      }
+
+      /* เอฟเฟกต์ Glitch */
+      @keyframes glitch {
+        0% {
+          text-shadow: 3px 3px #ff0000, -3px -3px #00ff00;
         }
-
-        body {
-            text-align: center;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
+        25% {
+          text-shadow: -3px -3px #ff0000, 3px 3px #00ff00;
         }
-
-        h1 {
-    font-size: 50px; /* ขยายขนาดตัวอักษร */
-    text-shadow: 0 0 15px #00ff00, 0 0 30px #00ff00, 0 0 45px #00ff00; /* เอฟเฟกต์แสงนีออน */
-    animation: glitch 1s infinite;
-    position: relative;
-    z-index: 10;
-}
-
-/* เอฟเฟกต์ Glitch */
-@keyframes glitch {
-    0% { text-shadow: 3px 3px #ff0000, -3px -3px #00ff00; }
-    25% { text-shadow: -3px -3px #ff0000, 3px 3px #00ff00; }
-    50% { text-shadow: 3px -3px #ff0000, -3px 3px #00ff00; }
-    75% { text-shadow: -3px 3px #ff0000, 3px -3px #00ff00; }
-    100% { text-shadow: 3px 3px #ff0000, -3px -3px #00ff00; }
-}
-
-
-        .container {
-            width: 80vw;
-            height: 80vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            align-items: center;
+        50% {
+          text-shadow: 3px -3px #ff0000, -3px 3px #00ff00;
         }
-
-        .input-container {
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-            position: relative;
-            z-index: 10;
-            flex-wrap: wrap;
+        75% {
+          text-shadow: -3px 3px #ff0000, 3px -3px #00ff00;
         }
-
-        input[type="text"],
-        input[type="text"]#baud {
-            color: #00ff00;
-            background-color: black;
-            border: 2px solid #00ff00;
-            padding: 5px;
-            font-size: 16px;
-            text-align: center;
-            width: 20%;
-            min-width: 120px;
-            box-shadow: 0 0 5px #00ff00;
-            position: relative;
-            z-index: 10;
+        100% {
+          text-shadow: 3px 3px #ff0000, -3px -3px #00ff00;
         }
+      }
 
-        button {
-            font-size: 16px;
-            font-weight: bold;
-            padding: 10px 15px;
-            background-color: black;
-            border: 2px solid #00ff00;
-            color: #00ff00;
-            text-transform: uppercase;
-            cursor: pointer;
-            transition: 0.3s;
-            box-shadow: 0 0 10px #00ff00;
-            position: relative;
-            z-index: 10;
-        }
+      .container {
+        width: 80vw;
+        height: 80vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: center;
+      }
 
-        button:hover {
-            background-color: #00ff00;
-            color: black;
-            box-shadow: 0 0 20px #00ff00;
-        }
+      .input-container {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        position: relative;
+        z-index: 10;
+        flex-wrap: wrap;
+      }
 
-        #serialResults {
-            font-family: 'VT323', monospace;
-            white-space: pre;
-            width: 100%;
-            height: 100%;
-            border: 2px solid #00ff00;
-            overflow-y: auto;
-            background-color: black;
-            padding: 10px;
-            text-align: left;
-            box-shadow: 0 0 10px #00ff00;
-            position: relative;
-            z-index: 10;
-        }
+      input[type="text"],
+      input[type="text"]#baud {
+        color: #00ff00;
+        background-color: black;
+        border: 2px solid #00ff00;
+        padding: 5px;
+        font-size: 16px;
+        text-align: center;
+        width: 20%;
+        min-width: 120px;
+        box-shadow: 0 0 5px #00ff00;
+        position: relative;
+        z-index: 10;
+      }
 
-        /* The Matrix Rain Effect */
-        canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 0;
-            pointer-events: none;
-        }
+      button {
+        font-size: 16px;
+        font-weight: bold;
+        padding: 10px 15px;
+        background-color: black;
+        border: 2px solid #00ff00;
+        color: #00ff00;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: 0.3s;
+        box-shadow: 0 0 10px #00ff00;
+        position: relative;
+        z-index: 10;
+      }
+
+      button:hover {
+        background-color: #00ff00;
+        color: black;
+        box-shadow: 0 0 20px #00ff00;
+      }
+
+      #serialResults {
+        font-family: "VT323", monospace;
+        white-space: pre;
+        width: 100%;
+        height: 100%;
+        border: 2px solid #00ff00;
+        overflow-y: auto;
+        background-color: black;
+        padding: 10px;
+        text-align: left;
+        box-shadow: 0 0 10px #00ff00;
+        position: relative;
+        z-index: 10;
+      }
+
+      /* The Matrix Rain Effect */
+      canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+        pointer-events: none;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <canvas id="matrixCanvas"></canvas>
 
     <h1>Hacker Terminal</h1>
 
     <div class="container">
-        <div class="input-container">
-            <input type="text" id="baud" list="baudList" placeholder="Baud Rate">
-            <datalist id="baudList">
-                <option value="110">110</option>
-                <option value="300">300</option>
-                <option value="600">600</option>
-                <option value="1200">1200</option>
-                <option value="2400">2400</option>
-                <option value="4800">4800</option>
-                <option value="9600">9600</option>
-                <option value="14400">14400</option>
-                <option value="19200">19200</option>
-                <option value="38400">38400</option>
-                <option value="57600">57600</option>
-                <option value="115200">115200</option>
-                <option value="128000">128000</option>
-                <option value="256000">256000</option>
-            </datalist>
-            <input type="text" id="lineToSend" placeholder="Type command...">
-            <button onclick="sendSerialLine()">Send</button>
-            <button onclick="connectSerial()">Connect</button>
-            <button onclick="serialResultsDiv.innerHTML = '';">Clear</button>
-            <br><br><br>
-        </div>
-        <div id="serialResults"></div>
+      <div class="input-container">
+        <input type="text" id="baud" list="baudList" placeholder="Baud Rate" />
+        <datalist id="baudList">
+          <option value="110">110</option>
+          <option value="300">300</option>
+          <option value="600">600</option>
+          <option value="1200">1200</option>
+          <option value="2400">2400</option>
+          <option value="4800">4800</option>
+          <option value="9600">9600</option>
+          <option value="14400">14400</option>
+          <option value="19200">19200</option>
+          <option value="38400">38400</option>
+          <option value="57600">57600</option>
+          <option value="115200">115200</option>
+          <option value="128000">128000</option>
+          <option value="256000">256000</option>
+        </datalist>
+        <input
+          type="text"
+          id="lineToSend"
+          list="commandList"
+          placeholder="Type command..."
+        />
+        <datalist id="commandList"></datalist>
+        <button onclick="sendSerialLine()">Send</button>
+        <button onclick="connectSerial()">Connect</button>
+        <button onclick="serialResultsDiv.innerHTML = '';">Clear</button>
+        <br /><br /><br />
+      </div>
+      <div id="serialResults"></div>
     </div>
 
     <script>
+      const canvas = document.getElementById("matrixCanvas");
+      const ctx = canvas.getContext("2d");
 
-                /* Matrix Rain Effect */
-                const canvas = document.getElementById("matrixCanvas");
-        const ctx = canvas.getContext("2d");
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
 
+      const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789@#$%^&*()*&^%";
+      const matrix = letters.split("");
+
+      const fontSize = 16;
+      const columns = Math.floor(canvas.width / fontSize);
+      const drops = Array(columns).fill(1);
+
+      function drawMatrix() {
+        ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.fillStyle = "#00ff00";
+        ctx.font = fontSize + "px monospace";
+
+        for (let i = 0; i < drops.length; i++) {
+          const text = matrix[Math.floor(Math.random() * matrix.length)];
+          ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+          if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+            drops[i] = 0;
+          }
+
+          drops[i]++;
+        }
+      }
+
+      setInterval(drawMatrix, 33);
+
+      window.addEventListener("resize", () => {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
+      });
+      var port, textEncoder, writableStreamClosed, writer;
+      const serialResultsDiv = document.getElementById("serialResults");
 
-        const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789@#$%^&*()*&^%";
-        const matrix = letters.split("");
+      async function connectSerial() {
+        try {
+          port = await navigator.serial.requestPort();
+          await port.open({ baudRate: document.getElementById("baud").value });
 
-        const fontSize = 16;
-        const columns = Math.floor(canvas.width / fontSize);
-        const drops = Array(columns).fill(1);
-
-        function drawMatrix() {
-            ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            ctx.fillStyle = "#00ff00";
-            ctx.font = fontSize + "px monospace";
-
-            for (let i = 0; i < drops.length; i++) {
-                const text = matrix[Math.floor(Math.random() * matrix.length)];
-                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-
-                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
-                    drops[i] = 0;
-                }
-
-                drops[i]++;
-            }
+          textEncoder = new TextEncoderStream();
+          writableStreamClosed = textEncoder.readable.pipeTo(port.writable);
+          writer = textEncoder.writable.getWriter();
+          await listenToPort();
+        } catch (e) {
+          alert("Serial Connection Failed: " + e);
         }
+      }
 
-        setInterval(drawMatrix, 33);
+      async function sendSerialLine() {
+        let dataToSend = document.getElementById("lineToSend").value;
+        if (dataToSend.trim() === "") return;
+        serialResultsDiv.innerHTML += "> " + dataToSend + "\n";
+        await writer.write(dataToSend + "\n");
+        document.getElementById("lineToSend").value = "";
+        serialResultsDiv.scrollTop = serialResultsDiv.scrollHeight;
+      }
 
-        window.addEventListener("resize", () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        });
-        var port, textEncoder, writableStreamClosed, writer;
-        const serialResultsDiv = document.getElementById("serialResults");
+      async function listenToPort() {
+        const textDecoder = new TextDecoderStream();
+        const readableStreamClosed = port.readable.pipeTo(textDecoder.writable);
+        const reader = textDecoder.readable.getReader();
 
-        async function connectSerial() {
-            try {
-                port = await navigator.serial.requestPort();
-                await port.open({ baudRate: document.getElementById("baud").value });
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) {
+            reader.releaseLock();
+            break;
+          }
+          serialResultsDiv.innerHTML += value;
+          serialResultsDiv.scrollTop = serialResultsDiv.scrollHeight;
 
-                textEncoder = new TextEncoderStream();
-                writableStreamClosed = textEncoder.readable.pipeTo(port.writable);
-                writer = textEncoder.writable.getWriter();
-                await listenToPort();
-            } catch (e) {
-                alert("Serial Connection Failed: " + e);
-            }
+          // ดึงคำสั่งจาก Serial และอัปเดต AutoComplete
+          let newCommands = value
+            .trim()
+            .split("\n")
+            .map((cmd) => cmd.trim())
+            .filter((cmd) => !cmd.includes(" "));
+          commands.push(...newCommands);
+          commands = [...new Set(commands)];
+
+          // อัปเดต datalist
+          let datalist = document.getElementById("commandList");
+          datalist.innerHTML = "";
+          commands.forEach((cmd) => {
+            let option = document.createElement("option");
+            option.value = cmd;
+            datalist.appendChild(option);
+          });
         }
+      }
 
-        async function sendSerialLine() {
-            let dataToSend = document.getElementById("lineToSend").value;
-            if (dataToSend.trim() === "") return;
-            serialResultsDiv.innerHTML += "> " + dataToSend + "\n";
-            await writer.write(dataToSend + "\n");
-            document.getElementById("lineToSend").value = "";
-            serialResultsDiv.scrollTop = serialResultsDiv.scrollHeight;
-        }
-
-        async function listenToPort() {
-            const textDecoder = new TextDecoderStream();
-            const readableStreamClosed = port.readable.pipeTo(textDecoder.writable);
-            const reader = textDecoder.readable.getReader();
-
-            while (true) {
-                const { value, done } = await reader.read();
-                if (done) {
-                    reader.releaseLock();
-                    break;
-                }
-                serialResultsDiv.innerHTML += value;
-                serialResultsDiv.scrollTop = serialResultsDiv.scrollHeight;
+      document
+        .getElementById("lineToSend")
+        .addEventListener("keydown", function (event) {
+          if (event.key === "Tab") {
+            event.preventDefault();
+            let userInput = this.value.toLowerCase();
+            let match = commands.find((cmd) => cmd.startsWith(userInput));
+            if (match) {
+              this.value = match;
             }
-        }
-
-        document.getElementById("lineToSend").addEventListener("keypress", function(event) {
-            if (event.key === "Enter") {
-                sendSerialLine();
-            }
+          }
         });
     </script>
-</body>
+  </body>
 </html>
