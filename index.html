@@ -174,22 +174,43 @@
         <button onclick="sendSerialLine()">Send</button>
         <button onclick="connectSerial()">Connect</button>
         <button onclick="serialResultsDiv.innerHTML = '';">Clear</button>
-        <br /><br /><br />
+        <br /><br /><br />  
       </div>
       <div id="serialResults"></div>
     </div>
 
     <script>
-      const commands = {
-    "ls": ["-a", "-l", "-h"],
-    "cd": [],
-    "mkdir": ["-p"],
-    "rm": ["-rf", "-i"],
-    "ping": ["-c 4", "-t"],
-    "echo": [],
-    "cat": [],
-    "chmod": ["777", "755"],
-    "help": []
+const commands = {
+    "scanap": [],
+    "scansta": [],
+    "stopscan": [],
+    "list": ["-a", "-s", "-c"],
+    "reboot": [],
+    "attack": ["-t beacon -l", "-t beacon -r", "-t beacon -a", "-t deauth", "-t deauth -c", "-t probe"],
+    "blespam": ["-t all", "-t apple", "-t samsung", "-t windows"],
+    "btwardrive": [],
+    "channel": ["-s", ""],
+    "clearlist": ["-a", "-s", "-c"],
+    "evilportal": ["-c start", "-c sethtml apple.html", "-c start -w CoxWifi.html"],
+    "gpsdata": [],
+    "help": [],
+    "led": ["-s", "-p rainbow"],
+    "listap": ["-a", "-s", "-c", "-t"],
+    "load": ["-a", "-s"],
+    "save": ["-a", "-s"],
+    "select": ["-a", "-a all", "-c", "-a -f"],
+    "settings": ["", "-s", "-r"],
+    "sigmon": [],
+    "sniffbt": ["[-t]"],
+    "sniffbeacon": [],
+    "sniffdeauth": [],
+    "sniffesp": [],
+    "sniffpmkid": [],
+    "sniffpwn": [],
+    "spoofat": ["-t"],
+    "ssid": ["-a -g", "-a -n", "-r"],
+    "update": ["-s/"],
+    "wardrive": ["[-s]"]
 };
 
 let tabIndex = 0;
@@ -205,27 +226,6 @@ async function sendSerialLine() {
     tabIndex = 0; // รีเซ็ตตำแหน่งเมื่อส่งคำสั่ง
 }
 
-async function listenToPort() {
-    const textDecoder = new TextDecoderStream();
-    const readableStreamClosed = port.readable.pipeTo(textDecoder.writable);
-    const reader = textDecoder.readable.getReader();
-
-    while (true) {
-        const { value, done } = await reader.read();
-        if (done) {
-            reader.releaseLock();
-            break;
-        }
-        serialResultsDiv.innerHTML += value;
-        serialResultsDiv.scrollTop = serialResultsDiv.scrollHeight;
-
-        let newCommands = value.trim().split("\n").map(cmd => cmd.trim()).filter(cmd => !cmd.includes(" "));
-        newCommands.forEach(cmd => {
-            if (!commands[cmd]) commands[cmd] = [];
-        });
-    }
-}
-
 document.getElementById("lineToSend").addEventListener("keydown", function (event) {
     if (event.key === "Tab") {
         event.preventDefault();
@@ -234,7 +234,7 @@ document.getElementById("lineToSend").addEventListener("keydown", function (even
         let argument = userInput.slice(1).join(" ");
 
         if (baseCommand !== lastBaseCommand) {
-            tabIndex = 0; // ถ้าเปลี่ยนคำสั่งให้เริ่มนับใหม่
+            tabIndex = 0; // รีเซ็ตถ้าเปลี่ยนคำสั่ง
         }
         lastBaseCommand = baseCommand;
 
@@ -270,6 +270,7 @@ document.getElementById("lineToSend").addEventListener("keydown", function (even
         tabIndex = 0; // รีเซ็ตตำแหน่งเมื่อส่งคำสั่ง
     }
 });
+
 
 
       const canvas = document.getElementById("matrixCanvas");
