@@ -263,12 +263,14 @@ document.getElementById("lineToSend").addEventListener("keydown", function (even
         let baseCommand = inputParts[0].toLowerCase();
         let currentArgs = inputParts.slice(1);
 
-        // ถ้ายังไม่มี baseCommand ให้เลือกก่อน
-        if (this.value === "" || !commands[baseCommand]) {
-            if (tabIndex >= baseCommandList.length) tabIndex = 0;
-            this.value = baseCommandList[tabIndex];
-            lastCommand = baseCommandList[tabIndex];
-            tabIndex++;
+        // ถ้าพิมพ์ไปบางส่วนแล้วกด Tab → เติมคำสั่งที่ตรงกับอินพุต
+        if (!commands[baseCommand]) {
+            let match = baseCommandList.find(cmd => cmd.startsWith(baseCommand));
+            if (match) {
+                this.value = match; // เติมคำสั่งให้เต็ม
+                lastCommand = match;
+                tabIndex = 0; // รีเซ็ตอาร์กิวเมนต์
+            }
             return;
         }
 
