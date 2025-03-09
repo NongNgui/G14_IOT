@@ -353,5 +353,1743 @@ document.getElementById("lineToSend").addEventListener("keydown", function (even
         }
       }
     </script>
-  </body>
+<!-- Sidebar Guide -->
+<div id="guideSidebar" style="
+position: fixed;
+top: 0;
+right: -300px; /* ซ่อน sidebar ไว้ก่อน */
+width: 300px;
+height: 100vh;
+background: rgba(0, 0, 0, 0.95);
+border-left: 2px solid #00ff00;
+box-shadow: -2px 0 10px #00ff00;
+padding: 20px;
+text-align: left;
+z-index: 9999;
+transition: right 0.3s ease-in-out;">
+
+<h2 style="color: #00ff00; font-size: 20px; margin-bottom: 10px; text-align: center;">
+    Guided Instructions
+</h2>
+<div style="max-height: 300px; overflow-y: auto; border: 1px solid #00ff00; padding: 10px;">
+    <p class="command" onclick="toggleSubcommands(); showPopup('attack', attackDescription)">attack</p>
+    <div id="attack-subcommands" style="display:none; padding-left: 20px;">
+        <p class="subcommand" onclick="showPopup('beacon', beaconDescription)">- beacon</p>
+        <p class="subcommand" onclick="showPopup('deauth', deauthDescription)">- deauth</p>
+        <p class="subcommand" onclick="showPopup('probe', probeDescription)">- probe</p>
+    </div>
+    
+    <script>
+        function toggleSubcommands() {
+            var subcommands = document.getElementById("attack-subcommands");
+            if (subcommands.style.display === "none") {
+                subcommands.style.display = "block";
+            } else {
+                subcommands.style.display = "none";
+            }
+        }
+    
+        const attackDescription = `
+            <p>Transmit WiFi frames with a specific target or broadcast.</p>
+            <h3>Usage</h3>
+            <p><span class="code-block">attack -t &lt;beacon [-l/-r/-a]/deauth [-s &lt;src mac&gt;] [-d &lt;dst mac&gt;]/probe/rickroll&gt;</span></p>
+            <h3>Arguments</h3>
+            <table border="1">
+                <tr><th>Argument</th><th>Required/Optional</th><th>Description</th></tr>
+                <tr><td>-t &lt;type&gt;</td><td>Required</td><td>Specify the attack type: beacon, deauth, probe, rickroll</td></tr>
+                <tr><td>-l/-r/-a</td><td>Required (for beacon)</td><td>Specify "list", "random", or "ap" attack for beacon spam</td></tr>
+                <tr><td>-s &lt;src_mac&gt;</td><td>Optional</td><td>Specify a source MAC address for deauthentication attack</td></tr>
+                <tr><td>-d &lt;dst_mac&gt;</td><td>Optional</td><td>Specify a destination MAC address for deauthentication attack</td></tr>
+                <tr><td>-c</td><td>Optional</td><td>Use only selected stations from the Station List</td></tr>
+            </table>
+        `;
+    
+        const beaconDescription = `
+        <p>Before executing a beacon spam list attack on the ESP32 Marauder, you must build a list of SSIDs using <b>ssid</b>. 
+        Once you have a list of SSIDs that can be used for a beacon spam attack, the attack can be executed and all SSIDs in your 
+        list will be transmitted as beacons. The attack can be ended with <b>stopscan</b>.</p>
+
+        <h3>Examples</h3>
+        <ul>
+            <li>Spam your list of generated SSIDs: <span class="code-block">attack -t beacon -l</span></li>
+            <li>Spam random SSIDs: <span class="code-block">attack -t beacon -r</span></li>
+            <li>Create fake copies of an AP: <span class="code-block">attack -t beacon -a</span></li>
+        </ul>
+    `;
+    
+        const deauthDescription = `
+        <p>There are 3 different methods to execute a deauthentication attack with the Marauder. These methods are described below.</p>
+
+        <h3>Method 1: Flood</h3>
+        <p>In a deauthentication flood attack, a target access point is specified as the source address of each deauthentication frame sent.
+        The destination address of these frames is set to broadcast. The intention is for all stations connected to the target access point to be removed from that network.</p>
+        <p>Before executing deauth flood attack on the ESP32 Marauder, you must build a list of available access points and select which access points to target.
+        See <b>scanap</b> and <b>select</b> for more details on how to build a target list.</p>
+
+        <h3>Method 2: Targeted</h3>
+        <p>In a targeted deauthentication attack, each deauthentication frame is tailored to a specific target station/client associated with a target access point.
+        The intention is for only specifically targeted stations to be deauthenticated from the targeted access points rather than all stations like in a flood.</p>
+        <p>Before executing a deauth flood attack on the ESP32 Marauder, you must build a list of available access points and stations.
+        You must also select which access points and stations to target. See <b>scanap</b>, <b>scansta</b>, and <b>select</b> for more details on how to build a target list.</p>
+
+        <h3>Method 3: Manual</h3>
+        <p>In a manual deauthentication attack, the source and destination address of the deauthentication frames sent are hand-jammed by the end user.
+        This is valuable for benign testing purposes or to attack access points or stations not found during scans.
+        Unlike the previous two methods, no scans or lists are required to execute this attack.
+        The user only needs to specify the source address and destination address with the <b>-s</b> and <b>-d</b> switch options respectively.</p>
+
+        <p>All 3 deauthentication attack methods can be ended with <b>stopscan</b>. For more information on deauthentication attacks, see <b>Wi-Fi deauthentication attack</b>.</p>
+
+        <h3>Examples</h3>
+        <ul>
+            <li>Target selected APs: <span class="code-block">attack -t deauth</span></li>
+            <li>Target selected APs and Stations: <span class="code-block">attack -t deauth -c</span></li>
+            <li>Manually specify Source MAC: <span class="code-block">attack -t deauth -s AA:BB:CC:DD:EE:FF</span></li>
+            <li>Manually specify source and destination: <span class="code-block">attack -t deauth -s AA:BB:CC:DD:EE:FF -d AA:BB:CC:DD:EE:FF</span></li>
+        </ul>
+
+        <p>For more information on how to properly execute these deauthentication attacks, please see <b>Deauthentication Attack Workflow</b>.</p>
+    `;
+    
+        const probeDescription = `
+        <p>Before executing a probe request flood attack on the ESP32 Marauder, you must build a list of available access points and select which access points to target.</p>
+        <p>See <b>scanap</b> and <b>select</b> for more details on how to build a target list.</p>
+        
+        <p>Once a proper target list has been built, a probe request flood can be executed. The attack can be ended with <b>stopscan</b>.</p>
+        <p>For more information on probe request attacks, see <b>Probe Requests</b>.</p>
+
+        <h3>Examples</h3>
+        <ul>
+            <li>Run standard probe request attack: <span class="code-block">attack -t probe</span></li>
+        </ul>
+    `;
+
+    
+        function showPopup(title, description) {
+            const popup = document.createElement("div");
+            popup.style.position = "fixed";
+            popup.style.top = "10%";
+            popup.style.left = "50%";
+            popup.style.transform = "translate(-50%, 0)";
+            popup.style.background = "black";
+            popup.style.color = "#00ff00";
+            popup.style.border = "2px solid #00ff00";
+            popup.style.padding = "15px";
+            popup.style.width = "80%";
+            popup.style.maxWidth = "500px";
+            popup.style.overflowY = "auto";
+            popup.style.maxHeight = "80vh";
+            popup.style.zIndex = "1000";
+    
+            popup.innerHTML = `<h2>${title}</h2>${description}<br><button onclick="document.body.removeChild(this.parentNode)" style="background:#00ff00; color:black; border:none; padding:5px 10px; cursor:pointer;">Close</button>`;
+    
+            document.body.appendChild(popup);
+        }
+    </script>
+    
+    <style>
+        .code-block {
+            background-color: #003300;
+            color: #00ff00;
+            padding: 5px;
+            border-radius: 5px;
+            font-family: monospace;
+            display: inline-block;
+            margin: 5px 0;
+        }
+        .subcommand {
+            color: #00ff00;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        .subcommand:hover {
+            text-decoration: underline;
+        }
+    </style>
+    
+    
+
+    <p class="command" onclick="showPopup('btspamall', btSpamAllDescription)">btspamall</p>
+
+    <script>
+        const btSpamAllDescription = `
+            <p>
+                This attack executes all available BLE attacks available within the Marauder firmware including
+                <span class="code-block">Sour Apple</span>, 
+                <span class="code-block">Samsung BLE Spam</span>, and 
+                <span class="code-block">Swift Pair</span>.
+                To exit the attack, press anywhere on the screen and you will be returned to the Marauder menu.
+            </p>
+    
+            <h3>Menu Path</h3>
+            <p><span class="code-block">Bluetooth > Bluetooth Attacks > BT Spam All</span></p>
+    
+            <h3>CLI</h3>
+            <p>
+                This function is available for use via the <span class="code-block">Marauder CLI</span>.
+                The following documentation describes command usage. The BT Spam All function can be stopped with 
+                <span class="code-block">stopscan</span>.
+            </p>
+    
+            <h3>Usage</h3>
+            <p><span class="code-block">blespam -t all</span></p>
+        `;
+    
+        function showPopup(title, description) {
+            document.getElementById("popup-title").innerText = title;
+            document.getElementById("popup-description").innerHTML = description;
+            document.getElementById("popup").style.display = "flex";
+        }
+    </script>
+    
+    <style>
+        .code-block {
+            background-color: #003300;
+            color: #00ff00;
+            padding: 5px;
+            border-radius: 5px;
+            font-family: monospace;
+            display: inline-block;
+            margin: 5px 0;
+        }
+    </style>
+    
+
+    <p class="command" onclick="showPopup('btwardrive', btwardriveDescription)">btwardrive</p>
+
+    <script>
+        const btwardriveDescription = `
+            <h3>Bluetooth Wardrive</h3>
+            <p>
+                This function allows users to detect Bluetooth devices and save their information along with location data to a log file.
+                This function requires the <a href="#">GPS Modification</a>. Devices are only displayed and logged on first detection.
+                To exit the scan session, tap anywhere on the screen.
+            </p>
+            
+            <p>
+                During a continuous Bluetooth wardrive, the function is the same except device information is not cached 
+                and therefore will continue to display and log repeat detections.
+            </p>
+    
+            <h3>Information Displayed While Sniffing</h3>
+            <ul>
+                <li>Source MAC</li>
+                <li>Latitude and Longitude (if valid fix)</li>
+                <li>"No Fix" (if no valid fix)</li>
+            </ul>
+
+    
+            <h3>CLI</h3>
+            <p>
+                This function is available for use via the <a href="#">Marauder CLI</a>.
+                The following documentation describes command usage. The Bluetooth wardrive function can be stopped with 
+                <a href="#">stopscan</a>.
+            </p>
+    
+            <h3>Usage</h3>
+            <p><span class="code-block">btwardrive [-c]</span></p>
+    
+            <h3>Arguments</h3>
+            <table border="1" style="width: 100%; text-align: left;">
+                <tr>
+                    <th>Argument</th>
+                    <th>Required/Optional</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td>-c</td>
+                    <td>Optional</td>
+                    <td>Do not filter on repeat device detection</td>
+                </tr>
+            </table>
+    
+            <h3>Bluetooth Wardrive Log Output</h3>
+            <p>
+                Logs are saved to the onboard SD card or to the Flipper SD card (if you have the serial firmware installed)
+                with the prefix <span class="code-block">"bt_wardrive_"</span>.
+            </p>
+        `;
+    
+        function showPopup(title, description) {
+            document.getElementById("popup-title").innerText = title;
+            document.getElementById("popup-description").innerHTML = description;
+            document.getElementById("popup").style.display = "flex";
+        }
+    </script>
+    
+    <style>
+        .code-block {
+            background-color: #003300;
+            color: #00ff00;
+            padding: 5px;
+            border-radius: 5px;
+            font-family: monospace;
+            display: inline-block;
+            margin: 5px 0;
+        }
+    </style>
+    
+    <p class="command" onclick="showPopup('channel', channelDescription)">channel</p>
+
+    <script>
+        const channelDescription = `
+            <p>Gets or sets the channel of the WiFi interface.</p>
+    
+            <h3>Usage</h3>
+            <p><span class="code-block">channel [-s &lt;channel&gt;]</span></p>
+    
+            <h3>Arguments</h3>
+            <table border="1" style="width: 100%; text-align: left;">
+                <tr>
+                    <th>Argument</th>
+                    <th>Required/Optional</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td>-s &lt;channel&gt;</td>
+                    <td>Optional</td>
+                    <td>Set the WiFi interface to the specified channel</td>
+                </tr>
+            </table>
+    
+            <h3>Examples</h3>
+            <p>Set your channel to 11: <span class="code-block">channel -s 11</span></p>
+            <p>Get your current channel: <span class="code-block">channel</span></p>
+        `;
+    </script>
+    
+
+    <p class="command" onclick="showPopup('clearlist', clearlistDescription)">clearlist</p>
+
+    <script>
+        const clearlistDescription = `
+            <p>
+                Clears the list of scanned access points or SSIDs from 
+                <a href="#">scanap</a>, <a href="#">ssid</a>, or <a href="#">scansta</a> respectively.
+                It is important to note if the list of access points is cleared, the list of stations will be cleared as well.
+            </p>
+    
+            <h3>Usage</h3>
+            <p><span class="code-block">clearlist -a/-s/-c</span></p>
+    
+            <h3>Arguments</h3>
+            <table border="1" style="width: 100%; text-align: left;">
+                <tr>
+                    <th>Argument</th>
+                    <th>Required/Optional</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td>-a / -s / -c</td>
+                    <td>Required</td>
+                    <td>Specify list of access points, SSIDs, or stations to clear</td>
+                </tr>
+            </table>
+    
+            <h3>Examples</h3>
+            <p>Clear list of scanned APs: <span class="code-block">clearlist -a</span></p>
+            <p>Clear list of SSIDs: <span class="code-block">clearlist -s</span></p>
+            <p>Clear list of stations: <span class="code-block">clearlist -c</span></p>
+        `;
+    </script>
+    
+
+    <p class="command" onclick="showPopup('evilportal', evilportalDescription)">evilportal</p>
+
+    <script>
+        const evilportalDescription = `
+            <p>
+                The <b>evilportal</b> command spawns an access point and hosts a webserver.
+                The webserver serves a web page with username and password forms.
+                Once a client connects to the access points and attempts to access any web page,
+                they will be redirected to the web page served by Marauder.
+                Any credentials they enter in the username and password fields will be displayed in Serial, Screen, and logs.
+                Evilportal can be stopped with <b>stopscan</b> (tapping the screen on TFT models).
+            </p>
+    
+            <h4>Requirements</h4>
+            <p>In order to run <b>evilportal</b>, the user will be required to provide two configurations:</p>
+            <table>
+                <tr>
+                    <th>Access Point Name</th>
+                    <th>index.html</th>
+                </tr>
+                <tr>
+                    <td>Can be provided by SSID list, AP list, or SD file</td>
+                    <td>Can only be provided by SD file</td>
+                </tr>
+            </table>
+    
+            <h4>Access Point Name</h4>
+            <p>The access point name can be set by the following priority list:</p>
+            <ol>
+                <li>The first SSID in the list of SSIDs.</li>
+                <li>The first instance of a "selected" AP in the list of APs.</li>
+                <li>From <b>/ap.config.txt</b> in the SD card attached to your ESP32.</li>
+            </ol>
+    
+            <h4>Using SSIDs</h4>
+            <p>You can create a list of SSIDs using <b>ssid</b>, <b>Add SSID</b>, or <b>Generate SSIDs</b>.</p>
+    
+            <h4>Using APs from scanap</h4>
+            <p>You can get a list of access points using <b>scanap</b> or <b>Scan APs</b>. This option will essentially clone a pre-scanned access point and use it for EvilPortal.</p>
+    
+            <h4>Using ap.config.txt</h4>
+            <p>You only need to put the desired name of your access point in the file like so...</p>
+            <p class="code-block">FreeWifi</p>
+    
+            <h4>Providing index.html</h4>
+            <p>
+                For the time being, <b>index.html</b> can only be provided via <b>/index.html</b> on the root of your ESP32-attached SD card.
+                You can find many different HTML files in <a href="#">bigbrodude6119's EvilPortal repo</a>.
+                Once you have chosen your HTML file, rename it to <b>index.html</b> and place it in the root of your ESP32 SD card.
+                If you wish to store multiple HTML files on your SD card, you can use the <b>sethtml</b> subcommand of evilportal to select a specific HTML file before starting the attack or when starting the attack.
+                You may also use <b>Select EP HTML File</b> to select any of the HTML files on your SD card if you are using official Marauder hardware.
+            </p>
+    
+            <h4>Usage</h4>
+            <p class="code-block">evilportal [-c start [-w &lt;html.html&gt;]/sethtml &lt;html.html&gt;]</p>
+    
+            <h4>Arguments</h4>
+            <table>
+                <tr>
+                    <th>Argument</th>
+                    <th>Required/Optional</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td>-c</td>
+                    <td>Optional</td>
+                    <td>Execute a command against the evil portal module <b>&lt;start/sethtml&gt;</b></td>
+                </tr>
+                <tr>
+                    <td>-w</td>
+                    <td>Optional</td>
+                    <td>Specify an HTML file to use. Only used when using <b>-c start</b></td>
+                </tr>
+            </table>
+    
+            <h4>Examples</h4>
+            <ul>
+                <li><span class="code-block">evilportal -c start</span>: Start evil portal with default <b>index.html</b> file.</li>
+                <li><span class="code-block">evilportal -c sethtml apple.html</span>: Set the active HTML as <b>apple.html</b>.</li>
+                <li><span class="code-block">evilportal -c start -w CoxWifi.html</span>: Start evil portal with <b>CoxWifi.html</b>.</li>
+            </ul>
+        `;
+    
+        function showPopup(title, description) {
+            const popup = document.createElement("div");
+            popup.style.position = "fixed";
+            popup.style.top = "10%";
+            popup.style.left = "50%";
+            popup.style.transform = "translate(-50%, 0)";
+            popup.style.background = "black";
+            popup.style.color = "#00ff00";
+            popup.style.border = "2px solid #00ff00";
+            popup.style.padding = "15px";
+            popup.style.width = "80%";
+            popup.style.maxWidth = "700px";
+            popup.style.overflowY = "auto";
+            popup.style.maxHeight = "80vh";
+    
+            popup.innerHTML = `<h2>${title}</h2>${description}<br><button onclick="document.body.removeChild(this.parentNode)">Close</button>`;
+    
+            document.body.appendChild(popup);
+        }
+    </script>
+    
+    <style>
+        .code-block {
+            background-color: #003300;
+            color: #00ff00;
+            padding: 5px;
+            border-radius: 5px;
+            font-family: monospace;
+            display: inline-block;
+            margin: 5px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #00ff00;
+            padding: 5px;
+        }
+        th {
+            background-color: #003300;
+        }
+    </style>
+    
+    <p class="command" onclick="showPopup('gpsdata', gpsdataDescription)">gpsdata</p>
+
+    <script>
+        const gpsdataDescription = `
+            <p>
+                Displays GPS data presented by the attached 
+                <a href="#">GPS Module</a>. The GPS data displayed refreshes every 5 seconds.
+                Stop displaying GPS data by entering 
+                <span class="code-block">stopscan</span>.
+            </p>
+    
+            <h3>Usage</h3>
+            <p><span class="code-block">gpsdata</span></p>
+        `;
+    </script>
+    
+
+    <p class="command" onclick="showPopup('help', helpDescription)">help</p>
+
+    <script>
+        const helpDescription = `
+            <p>
+                Shows full list of commands and their available arguments.
+            </p>
+    
+            <h3>Usage</h3>
+            <p><span class="code-block">help</span></p>
+        `;
+    </script>
+    
+
+    <p class="command" onclick="showPopup('led', ledDescription)">led</p>
+
+    <script>
+        const ledDescription = `
+            <p>
+                This command is responsible for manipulating the color of the onboard RGB LED (on supported hardware). 
+                You can specify a hex color code or a pre-programmed pattern.
+            </p>
+    
+            <h3>Usage</h3>
+            <p><span class="code-block">led -s {#hexcode}/-p {pattern}</span></p>
+    
+            <h3>Arguments</h3>
+            <table border="1" style="width: 100%; text-align: left;">
+                <tr>
+                    <th>Argument</th>
+                    <th>Required/Optional</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td>-s</td>
+                    <td>Optional</td>
+                    <td>Specify a color hex code</td>
+                </tr>
+                <tr>
+                    <td>-p</td>
+                    <td>Optional</td>
+                    <td>Specify a pre-programmed pattern</td>
+                </tr>
+            </table>
+    
+            <h3>Examples</h3>
+            <p>Set the LED color to hex code <span class="code-block">#8F00FF</span>: 
+            <span class="code-block">led -s #8F00FF</span></p>
+    
+            <p>Set the LED pattern to rainbow: 
+            <span class="code-block">led -p rainbow</span></p>
+        `;
+    </script>
+    
+
+    <p class="command" onclick="showPopup('list', listDescription)">list</p>
+
+    <script>
+        const listDescription = `
+            <p>
+                Get full list of access points scanned with <a href="#">scanap</a> or SSIDs added with <a href="#">ssid</a>. 
+                Access points showing <span class="code-block">(selected)</span> will be used in any future attacks. See <a href="#">select</a>.
+            </p>
+    
+            <h3>Usage</h3>
+            <p><span class="code-block">listap -a/-s/-c/-t</span></p>
+    
+            <h3>Arguments</h3>
+            <table border="1" style="width: 100%; text-align: left;">
+                <tr>
+                    <th>Argument</th>
+                    <th>Required/Optional</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td>-a/-s/-c/-t</td>
+                    <td>Required</td>
+                    <td>Specify list of access points, SSIDs, stations, or AirTags to display</td>
+                </tr>
+            </table>
+        `;
+    </script>
+    
+
+    <p class="command" onclick="showPopup('load', loadDescription)">load</p>
+
+    <script>
+        const loadDescription = `
+            <p>
+                Load your current list of SSIDs or Access Points. If you saved a list of SSIDs for beacons or you have scanned access points,
+                you can load these items from your SD card. The loaded items will populate your SSID or access point lists respectively.
+            </p>
+    
+            <p><strong>Note:</strong> Because of ArduinoJson limitations, there is a limit to how many APs can be loaded from your SD files and it is around
+            ~20 depending on your current memory usage. We are currently working on workarounds.</p>
+    
+            <h3>CLI</h3>
+            <p>This function is available for use via the <a href="#">Marauder CLI</a>.
+            The following documentation describes command usage.</p>
+    
+            <h3>Usage</h3>
+            <p><span class="code-block">load -a/-s</span></p>
+    
+            <h3>Arguments</h3>
+            <table border="1" style="width: 100%; text-align: left;">
+                <tr>
+                    <th>Argument</th>
+                    <th>Required/Optional</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td>-s</td>
+                    <td>Optional</td>
+                    <td>Save list of SSIDs</td>
+                </tr>
+                <tr>
+                    <td>-a</td>
+                    <td>Optional</td>
+                    <td>Save list of Access Points</td>
+                </tr>
+            </table>
+        `;
+    
+        function showPopup(title, description) {
+            document.getElementById("popup-title").innerText = title;
+            document.getElementById("popup-description").innerHTML = description;
+            document.getElementById("popup").style.display = "flex";
+        }
+    </script>
+    
+    <style>
+        .code-block {
+            background-color: #003300;
+            color: #00ff00;
+            padding: 5px;
+            border-radius: 5px;
+            font-family: monospace;
+            display: inline-block;
+            margin: 5px 0;
+        }
+    </style>
+    
+
+    <p class="command" onclick="showPopup('reboot', rebootDescription)">reboot</p>
+    <script>
+        const rebootDescription = `
+            <p>Soft restart of the ESP32.</p>
+    
+            <h3>Usage</h3>
+            <p><span class="code-block">reboot</span></p>
+        `;
+    
+        function showPopup(title, description) {
+            document.getElementById("popup-title").innerText = title;
+            document.getElementById("popup-description").innerHTML = description;
+            document.getElementById("popup").style.display = "flex";
+        }
+    </script>
+    
+    <style>
+        .code-block {
+            background-color: #003300;
+            color: #00ff00;
+            padding: 5px;
+            border-radius: 5px;
+            font-family: monospace;
+            display: inline-block;
+            margin: 5px 0;
+        }
+    </style>
+    
+
+    <p class="command" onclick="showPopup('save', saveDescription)">save</p>
+
+    <script>
+        const saveDescription = `
+            <p>
+                Save your current list of SSIDs or Access Points. If you create a list of SSIDs for beacons or 
+                you have scanned access points, you can save these items to your SD card to be used later.
+            </p>
+    
+            <h3>CLI</h3>
+            <p>
+                This function is available for use via the <a href="#">Marauder CLI</a>. 
+                The following documentation describes command usage.
+            </p>
+    
+            <h3>Usage</h3>
+            <p><span class="code-block">save -a/-s</span></p>
+    
+            <h3>Arguments</h3>
+            <table border="1" style="width: 100%; text-align: left;">
+                <tr>
+                    <th>Argument</th>
+                    <th>Required/Optional</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td>-s</td>
+                    <td>Optional</td>
+                    <td>Save list of SSIDs</td>
+                </tr>
+                <tr>
+                    <td>-a</td>
+                    <td>Optional</td>
+                    <td>Save list of Access Points</td>
+                </tr>
+            </table>
+        `;
+    </script>
+    
+    <p class="command" onclick="showPopup('scanap', scanapDescription)">scanap</p>
+
+    <script>
+        const scanapDescription = `
+            <p>
+                Does a scan of wireless access points and saves them to a list to be used in future operations. 
+                This scan can be stopped with <a href="#">stopscan</a>. The list of scanned access points can be 
+                shown with <a href="#">list</a> and cleared with <a href="#">clearlist</a>.
+            </p>
+    
+            <h3>Usage</h3>
+            <p><span class="code-block">scanap</span></p>
+        `;
+    </script>
+    
+
+    <p class="command" onclick="showPopup('scansta', scanstaDescription)">scansta</p>
+
+    <script>
+        const scanstaDescription = `
+            <p>
+                Does a scan of wireless stations/clients and saves them to a list to be used in future operations. 
+                This scan can be stopped with <a href="#">stopscan</a>. The <a href="#">list</a> of scanned stations 
+                can be shown with list and cleared with <a href="#">clearlist</a>.
+            </p>
+    
+            <p>
+                Before <span class="code-block">scansta</span> can detect stations in range, you must scan for access 
+                points with <a href="#">scanap</a>. During <span class="code-block">scansta</span>, Marauder will only 
+                save scanned stations to the station list if they are associated with access points that are already part 
+                of the access point list generated from <a href="#">scanap</a>.
+            </p>
+    
+            <h3>Usage</h3>
+            <p><span class="code-block">scansta</span></p>
+        `;
+    </script>
+    
+
+    <p class="command" onclick="showPopup('select', selectDescription)">select</p>
+
+    <script>
+        const selectDescription = `
+            <p>
+                Select or deselect access points and/or stations for targeted attacks. You must provide a comma-separated 
+                list of indices of the desired access points and/or stations from <a href="#">list</a>.
+            </p>
+            <p>
+                Any specified indices which were <strong>NOT</strong> already <span class="code-block">selected</span> 
+                will become <span class="code-block">selected</span>. Any specified indices which were already 
+                <span class="code-block">selected</span> will no longer be <span class="code-block">selected</span>.
+            </p>
+    
+            <h3>Usage</h3>
+            <p><span class="code-block">select [-a &lt;CSL of target indices&gt;] | [-s &lt;CSL of target indices&gt;] | [-c &lt;CSL of target indices&gt;]</span></p>
+    
+            <h3>Arguments</h3>
+            <table border="1" style="width: 100%; text-align: left;">
+                <tr>
+                    <th>Argument</th>
+                    <th>Required/Optional</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td>-a &lt;CSL of target indices&gt;/all</td>
+                    <td>Optional</td>
+                    <td>The index numbers of the access points shown with <a href="#">list</a></td>
+                </tr>
+                <tr>
+                    <td>-s &lt;CSL of target indices&gt;</td>
+                    <td>Optional</td>
+                    <td>The index numbers of the SSIDs shown with <a href="#">list</a></td>
+                </tr>
+                <tr>
+                    <td>-c &lt;CSL of target indices&gt;</td>
+                    <td>Optional</td>
+                    <td>The index numbers of the stations shown with <a href="#">list</a></td>
+                </tr>
+                <tr>
+                    <td>-f equals/contains &lt;String&gt;</td>
+                    <td>Optional</td>
+                    <td>Select indices equal to or containing the specified string</td>
+                </tr>
+            </table>
+    
+            <h3>Examples</h3>
+            <p><span class="code-block">select -a 1,3,5</span>: Selects APs at indices 1, 3, and 5</p>
+            <p><span class="code-block">select -a all</span>: Selects all APs in the list</p>
+            <p><span class="code-block">select -c 3,4,29</span>: Selects stations at indices 3, 4, and 29</p>
+            <p><span class="code-block">select -a -f "equals 'E CORP' or contains EVIL"</span>: Select all APs whose ESSIDs are equal to <span class="code-block">E CORP</span> or contain <span class="code-block">EVIL</span></p>
+        `;
+    </script>
+    
+
+    <p class="command" onclick="showPopup('settings', settingsDescription)">settings</p>
+
+    <script>
+        const settingsDescription = `
+            <h3>Settings</h3>
+            <p>
+                Display and manage settings for the ESP32 Marauder firmware. 
+                For more information on the available settings, see <a href="#">Marauder Settings</a>.
+            </p>
+    
+            <h3>Usage</h3>
+            <p><span class="code-block">settings [-s &lt;setting&gt; enable/disable] [-r]</span></p>
+    
+            <h3>Arguments</h3>
+            <table border="1" style="width: 100%; text-align: left;">
+                <tr>
+                    <th>Argument</th>
+                    <th>Required/Optional</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td>-s &lt;setting&gt; enable/disable</td>
+                    <td>Optional</td>
+                    <td>Enable or disable a specific setting</td>
+                </tr>
+                <tr>
+                    <td>-r</td>
+                    <td>Optional</td>
+                    <td>Restore settings to default</td>
+                </tr>
+            </table>
+    
+            <h3>Examples</h3>
+            <p>
+                <span class="code-block">settings</span> : Displays settings available for management.
+            </p>
+            <p>
+                <span class="code-block">settings -s ForcePMKID enable</span> : Enables deauthentication packets while sniffing for PMKID.
+            </p>
+            <p>
+                <span class="code-block">settings -r</span> : Restores all settings to their default values.
+            </p>
+        `;
+    
+        function showPopup(title, description) {
+            document.getElementById("popup-title").innerText = title;
+            document.getElementById("popup-description").innerHTML = description;
+            document.getElementById("popup").style.display = "flex";
+        }
+    </script>
+    
+    <style>
+        .code-block {
+            background-color: #003300;
+            color: #00ff00;
+            padding: 5px;
+            border-radius: 5px;
+            font-family: monospace;
+            display: inline-block;
+            margin: 5px 0;
+        }
+    </style>
+    
+
+    <p class="command" onclick="showPopup('sigmon', sigmonDescription)">sigmon</p>
+
+    <script>
+        const sigmonDescription = `
+            <h3>Signal Monitor (sigmon)</h3>
+            <p>
+                Shows changes in signal strength as long as the RSSI value changes by 5. 
+                Only access points marked as <span class="code-block">selected</span> will be tracked.
+                While scanning, channels are hopped once every second.
+            </p>
+    
+            <p>See <a href="#">Signal Monitor Workflow</a> for examples.</p>
+    
+            <h3>Usage</h3>
+            <p><span class="code-block">sigmon</span></p>
+        `;
+    
+        function showPopup(title, description) {
+            document.getElementById("popup-title").innerText = title;
+            document.getElementById("popup-description").innerHTML = description;
+            document.getElementById("popup").style.display = "flex";
+        }
+    </script>
+    
+    <style>
+        .code-block {
+            background-color: #003300;
+            color: #00ff00;
+            padding: 5px;
+            border-radius: 5px;
+            font-family: monospace;
+            display: inline-block;
+            margin: 5px 0;
+        }
+    </style>
+    
+
+    <p class="command" onclick="showPopup('sniffbt', sniffbtDescription)">sniffbt</p>
+
+    <script>
+        const sniffbtDescription = `
+            <p>
+                Start any of the different types of Bluetooth sniffing. 
+                Using different switch arguments, you can specify filters to use while sniffing.
+                If you do not specify a filter, it will default to sniffing all Bluetooth devices.
+            </p>
+    
+            <h3>Usage</h3>
+            <p><span class="code-block">sniffbt [-t] &lt;airtag/flipper&gt;</span></p>
+    
+            <h3>Arguments</h3>
+            <table border="1" style="width: 100%; text-align: left;">
+                <tr>
+                    <th>Argument</th>
+                    <th>Required/Optional</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td>-t</td>
+                    <td>Optional</td>
+                    <td>Specify sniffing for either <a href="#">Airtags</a> or <a href="#">Flipper Zero</a></td>
+                </tr>
+            </table>
+        `;
+    
+        function showPopup(title, description) {
+            document.getElementById("popup-title").innerText = title;
+            document.getElementById("popup-description").innerHTML = description;
+            document.getElementById("popup").style.display = "flex";
+        }
+    </script>
+    
+    <style>
+        .code-block {
+            background-color: #003300;
+            color: #00ff00;
+            padding: 5px;
+            border-radius: 5px;
+            font-family: monospace;
+            display: inline-block;
+            margin: 5px 0;
+        }
+    </style>
+    
+    <p class="command" onclick="showPopup('sniffbeacon', sniffbeaconDescription)">sniffbeacon</p>
+
+    <script>
+        const sniffbeaconDescription = `
+            <p>
+                Sniffs and displays information on beacon frames transmitted from access points.
+                Beacon frames contain important information about access points.
+                The sniffing sessions can be ended with <a href="#">stopscan</a>.
+            </p>
+            <p>
+                While the <span class="code-block">sniffbeacon</span> function is running, 
+                Marauder will automatically cycle through channels to capture as much traffic as possible.
+            </p>
+            <p>For more information on beacon frames, see <a href="#">Beacon Frame</a>.</p>
+    
+            <h3>Usage</h3>
+            <p><span class="code-block">sniffbeacon</span></p>
+        `;
+    
+        function showPopup(title, description) {
+            document.getElementById("popup-title").innerText = title;
+            document.getElementById("popup-description").innerHTML = description;
+            document.getElementById("popup").style.display = "flex";
+        }
+    </script>
+    
+    <style>
+        .code-block {
+            background-color: #003300;
+            color: #00ff00;
+            padding: 5px;
+            border-radius: 5px;
+            font-family: monospace;
+            display: inline-block;
+            margin: 5px 0;
+        }
+    </style>
+    
+
+    <p class="command" onclick="showPopup('sniffdeauth', sniffdeauthDescription)">sniffdeauth</p>
+
+    <script>
+        const sniffdeauthDescription = `
+            <p>
+                Sniff and display deauthentication frames on screen.
+                While the <span class="code-block">sniffdeauth</span> function is running, 
+                Marauder automatically cycles through channels to capture as much traffic as possible.
+            </p>
+            <p>
+                This function can be stopped with <a href="#">stopscan</a>.
+            </p>
+            <p>For more information on Deauthentication, see <a href="#">Deauthentication Attack</a>.</p>
+    
+            <h3>Usage</h3>
+            <p><span class="code-block">sniffdeauth</span></p>
+        `;
+    
+        function showPopup(title, description) {
+            document.getElementById("popup-title").innerText = title;
+            document.getElementById("popup-description").innerHTML = description;
+            document.getElementById("popup").style.display = "flex";
+        }
+    </script>
+    
+    <style>
+        .code-block {
+            background-color: #003300;
+            color: #00ff00;
+            padding: 5px;
+            border-radius: 5px;
+            font-family: monospace;
+            display: inline-block;
+            margin: 5px 0;
+        }
+    </style>
+    
+
+    <p class="command" onclick="showPopup('sniffesp', sniffespDescription)">sniffesp</p>
+
+    <script>
+        const sniffespDescription = `
+            <p>
+                Sniff and display any WiFi frame sent by a source MAC known to be from the manufacturer, <b>Espressif</b>.
+                The frames are typically sent from smart-home devices like IoT lights, plugs, and vibrators.
+            </p>
+            <p>
+                This scan can be stopped with <a href="#">stopscan</a>.
+            </p>
+    
+            <h3>Usage</h3>
+            <p><span class="code-block">sniffesp</span></p>
+        `;
+    
+        function showPopup(title, description) {
+            document.getElementById("popup-title").innerText = title;
+            document.getElementById("popup-description").innerHTML = description;
+            document.getElementById("popup").style.display = "flex";
+        }
+    </script>
+    
+    <style>
+        .code-block {
+            background-color: #003300;
+            color: #00ff00;
+            padding: 5px;
+            border-radius: 5px;
+            font-family: monospace;
+            display: inline-block;
+            margin: 5px 0;
+        }
+    </style>
+    
+
+    <p class="command" onclick="showPopup('sniffpmkid', sniffpmkidDescription)">sniffpmkid</p>
+
+    <script>
+        const sniffpmkidDescription = `
+            <p>
+                Sniffs and displays captured PMKID/EAPOL frames sent during WiFi authentication sessions. 
+                Unlike other sniffing functions, the raw frame data is displayed on screen to be copied and saved elsewhere.
+                This scan can be stopped with <a href="#">stopscan</a>.
+            </p>
+    
+            <p>
+                <span class="code-block">sniffpmkid</span> will <b>NOT</b> automatically cycle through channels while sniffing. 
+                In order to change to a new channel while sniffing, use <a href="#">channel</a>.
+            </p>
+    
+            <p>
+                For more information on PMKID and 4-way handshakes, see 
+                <a href="#">4-Way Handshake</a>.
+            </p>
+    
+            <h4>Note:</h4>
+            <p>
+                Channels are cycled one channel every second when using the <span class="code-block">-l</span> switch.
+                There is no need to manually set/update the channel before/during the sniff.
+            </p>
+    
+            <h3>Usage</h3>
+            <p><span class="code-block">sniffpmkid [-c &lt;channel&gt;] [-d] [-l]</span></p>
+    
+            <h3>Arguments</h3>
+            <table border="1" style="width: 100%; text-align: left;">
+                <tr>
+                    <th>Argument</th>
+                    <th>Required/Optional</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td><span class="code-block">-c &lt;channel&gt;</span></td>
+                    <td>Optional</td>
+                    <td>Specify the channel to start sniffing on</td>
+                </tr>
+                <tr>
+                    <td><span class="code-block">-d</span></td>
+                    <td>Optional</td>
+                    <td>Send deauthentication frames to trigger handshakes</td>
+                </tr>
+                <tr>
+                    <td><span class="code-block">-l</span></td>
+                    <td>Optional</td>
+                    <td>Only target selected access points from <a href="#">list</a></td>
+                </tr>
+            </table>
+        `;
+    
+        function showPopup(title, description) {
+            document.getElementById("popup-title").innerText = title;
+            document.getElementById("popup-description").innerHTML = description;
+            document.getElementById("popup").style.display = "flex";
+        }
+    </script>
+    
+    <style>
+        .code-block {
+            background-color: #003300;
+            color: #00ff00;
+            padding: 5px;
+            border-radius: 5px;
+            font-family: monospace;
+            display: inline-block;
+            margin: 5px 0;
+        }
+    </style>
+    
+
+    <p class="command" onclick="showPopup('sniffpwn', sniffpwnDescription)">sniffpwn</p>
+
+    <script>
+        const sniffpwnDescription = `
+            <p>
+                Sniffs and displays information from beacon frames sent by the 
+                <a href="#">Pwnagotchi</a>. The Pwnagotchi sends beacon frames to 
+                advertise its presence to other Pwnagotchis. These packets contain 
+                information about the Pwnagotchi.
+            </p>
+            <p>This scan can be stopped with <a href="#">stopscan</a>.</p>
+    
+            <h3>Usage</h3>
+            <p><span class="code-block">sniffpwn</span></p>
+        `;
+    
+        function showPopup(title, description) {
+            document.getElementById("popup-title").innerText = title;
+            document.getElementById("popup-description").innerHTML = description;
+            document.getElementById("popup").style.display = "flex";
+        }
+    </script>
+    
+    <style>
+        .code-block {
+            background-color: #003300;
+            color: #00ff00;
+            padding: 5px;
+            border-radius: 5px;
+            font-family: monospace;
+            display: inline-block;
+            margin: 5px 0;
+        }
+    </style>
+    
+
+    <p class="command" onclick="showPopup('sourapple', sourAppleDescription)">sourapple</p>
+
+    <script>
+        const sourAppleDescription = `
+            <p>
+                This vulnerability and exploit was discovered and developed by 
+                <a href="#">ECTO-1A</a> and ported to Arduino ESP32 by 
+                <a href="#">RapierXbox</a>. This function causes iPhones running iOS17 
+                to crash as a result of apple device activity spamming over Bluetooth.
+                Additional information about this attack can be found 
+                <a href="#">here</a>, <a href="#">here</a>, and <a href="#">here</a>.
+            </p>
+            <p>
+                To exit the attack, press anywhere on the screen and you will be 
+                returned to the Marauder menu.
+            </p>
+    
+            <h3>CLI</h3>
+            <p>
+                This function is available for use via the 
+                <a href="#">Marauder CLI</a>. The following documentation describes 
+                command usage. The Sour Apple function can be stopped with 
+                <a href="#">stopscan</a>.
+            </p>
+    
+            <h3>Usage</h3>
+            <p><span class="code-block">blespam -t apple</span></p>
+        `;
+    
+        function showPopup(title, description) {
+            document.getElementById("popup-title").innerText = title;
+            document.getElementById("popup-description").innerHTML = description;
+            document.getElementById("popup").style.display = "flex";
+        }
+    </script>
+    
+    <style>
+        .code-block {
+            background-color: #003300;
+            color: #00ff00;
+            padding: 5px;
+            border-radius: 5px;
+            font-family: monospace;
+            display: inline-block;
+            margin: 5px 0;
+        }
+    </style>
+    
+    <p class="command" onclick="showPopup('spoofat', spoofatDescription)">spoofat</p>
+
+    <script>
+        const spoofatDescription = `
+            <h3>Spoof Airtag</h3>
+            <p>
+                Spoof Airtag is able to replicate data captured during an 
+                <a href="#">Airtag Sniff</a> and broadcast it as Bluetooth Low Energy advertisements.
+                The data advertised is an exact copy of the data captured during the sniff session.
+                Upon a refresh of the Airtag data, the data stored in memory by the Marauder firmware 
+                will no longer match the official data of the legitimate Airtag.
+            </p>
+    
+            <h3>CLI</h3>
+            <p>
+                This function is available for use via the <a href="#">Marauder CLI</a>.
+                The following documentation describes command usage.
+                The Spoof Airtag function can be stopped with <a href="#">stopscan</a>.
+                Before you can execute an Airtag Spoof, you must use the 
+                <a href="#">list</a> command to get the index of the target Airtag.
+            </p>
+    
+            <h3>Usage</h3>
+            <p><span class="code-block">spoofat -t &lt;index&gt;</span></p>
+        `;
+    
+        function showPopup(title, description) {
+            document.getElementById("popup-title").innerText = title;
+            document.getElementById("popup-description").innerHTML = description;
+            document.getElementById("popup").style.display = "flex";
+        }
+    </script>
+    
+    <style>
+        .code-block {
+            background-color: #003300;
+            color: #00ff00;
+            padding: 5px;
+            border-radius: 5px;
+            font-family: monospace;
+            display: inline-block;
+            margin: 5px 0;
+        }
+    </style>
+    
+    <p class="command" onclick="showPopup('ssid', ssidDescription)">ssid</p>
+
+    <script>
+        const ssidDescription = `
+            <p>
+                Generate or remove SSIDs for beacon spam attacks. Generated SSIDs can be viewed with 
+                <a href="#">list</a>.
+            </p>
+    
+            <h3>Usage</h3>
+            <p><code>ssid [-a [-g &lt;count&gt;]|[-n &lt;name&gt;]][-r &lt;index&gt;]</code></p>
+    
+            <h3>Arguments</h3>
+            <table border="1" style="width: 100%; text-align: left;">
+                <tr>
+                    <th>Argument</th>
+                    <th>Required/Optional</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td><code>-a/-r &lt;index&gt;</code></td>
+                    <td>Required</td>
+                    <td>Specify whether to add (<code>-a</code>) or remove (<code>-r</code>)</td>
+                </tr>
+                <tr>
+                    <td><code>-g &lt;count&gt;</code></td>
+                    <td>Optional</td>
+                    <td>Specify after option <code>-a</code> how many SSIDs to generate</td>
+                </tr>
+                <tr>
+                    <td><code>-n &lt;name&gt;</code></td>
+                    <td>Optional</td>
+                    <td>Specify after option <code>-a</code> the name of the SSID to be added</td>
+                </tr>
+            </table>
+    
+            <h3>Examples</h3>
+            <p><code>ssid -a -g 3</code>: Generates 3 random SSIDs and adds them to the SSID list</p>
+            <p><code>ssid -a -n chicken</code>: Generates an SSID named "chicken" and adds it to the list</p>
+            <p><code>ssid -r 3</code>: Removes SSID at index 3 from the list of SSIDs</p>
+        `;
+    
+        function showPopup(title, description) {
+            document.getElementById("popup-title").innerText = title;
+            document.getElementById("popup-description").innerHTML = description;
+            document.getElementById("popup").style.display = "flex";
+        }
+    </script>
+    
+    <style>
+        .code-block, code {
+            background-color: #003300;
+            color: #00ff00;
+            padding: 5px;
+            border-radius: 5px;
+            font-family: monospace;
+            display: inline-block;
+            margin: 5px 0;
+        }
+    </style>
+    
+
+    <p class="command" onclick="showPopup('stopscan', stopscanDescription)">stopscan</p>
+
+    <script>
+        const stopscanDescription = `
+            <p>Stops any currently running WiFi/Bluetooth scan or attack.</p>
+    
+            <h3>Usage</h3>
+            <p><span class="code-block">stopscan</span></p>
+        `;
+    
+        function showPopup(title, description) {
+            document.getElementById("popup-title").innerText = title;
+            document.getElementById("popup-description").innerHTML = description;
+            document.getElementById("popup").style.display = "flex";
+        }
+    </script>
+    
+    <style>
+        .code-block {
+            background-color: #003300;
+            color: #00ff00;
+            padding: 5px;
+            border-radius: 5px;
+            font-family: monospace;
+            display: inline-block;
+            margin: 5px 0;
+        }
+    </style>
+    
+
+    <p class="command" onclick="showPopup('samsungblespam', samsungBleSpamDescription)">samsungblespam</p>
+
+    <script>
+        const samsungBleSpamDescription = `
+            <p>
+                This vulnerability and exploit was discovered and developed by 
+                <a href="#">Spooks4576</a>. It causes Samsung devices to receive 
+                BLE Watch pair spam, rendering the affected device nearly useless 
+                while the attack is running. To exit the attack, press anywhere on 
+                the screen and you will be returned to the Marauder menu.
+            </p>
+    
+            <h3>CLI</h3>
+            <p>
+                This function is available for use via the 
+                <a href="#">Marauder CLI</a>. The following documentation describes 
+                command usage. The Samsung BLE Spam function can be stopped with 
+                <a href="#">stopscan</a>.
+            </p>
+    
+            <h3>Usage</h3>
+            <p><span class="code-block">blespam -t samsung</span></p>
+        `;
+    
+        function showPopup(title, description) {
+            document.getElementById("popup-title").innerText = title;
+            document.getElementById("popup-description").innerHTML = description;
+            document.getElementById("popup").style.display = "flex";
+        }
+    </script>
+    
+    <style>
+        .code-block {
+            background-color: #003300;
+            color: #00ff00;
+            padding: 5px;
+            border-radius: 5px;
+            font-family: monospace;
+            display: inline-block;
+            margin: 5px 0;
+        }
+    </style>
+    
+
+    <p class="command" onclick="showPopup('swiftpair', swiftpairDescription)">swiftpair</p>
+
+    <script>
+        const swiftpairDescription = `
+            <h2>Swiftpair Spam</h2>
+            <p>
+                Swiftpair spam creates BLE Swiftpair traffic sourcing from randomly 
+                generated MAC addresses. This causes repeated notifications for BLE 
+                device pair on Swiftpair-enabled devices, such as Windows PCs.
+            </p>
+            <p>
+                The vulnerability research and attack development was conducted by 
+                <a href="#">@Spooks4576</a>. In addition to this capability development, 
+                he has assisted in its integration into Marauder’s suite of tools. 
+                Additional information about this attack can be found 
+                <a href="#">here</a>. 
+            </p>
+            <p>
+                To exit the attack, press anywhere on the screen and you will be 
+                returned to the Marauder menu.
+            </p>
+    
+            <h3>CLI</h3>
+            <p>
+                This function is available for use via the 
+                <a href="#">Marauder CLI</a>. The following documentation describes 
+                command usage. The Swiftpair Spam function can be stopped with 
+                <a href="#">stopscan</a>.
+            </p>
+    
+            <h3>Usage</h3>
+            <p><span class="code-block">blespam -t windows</span></p>
+        `;
+    
+        function showPopup(title, description) {
+            document.getElementById("popup-title").innerText = title;
+            document.getElementById("popup-description").innerHTML = description;
+            document.getElementById("popup").style.display = "flex";
+        }
+    </script>
+    
+    <style>
+        .code-block {
+            background-color: #003300;
+            color: #00ff00;
+            padding: 5px;
+            border-radius: 5px;
+            font-family: monospace;
+            display: inline-block;
+            margin: 5px 0;
+        }
+    </style>
+    
+
+    <p class="command" onclick="showPopup('update', updateDescription)">update</p>
+
+    <script>
+        const updateDescription = `
+            <p>
+                Performs a firmware update of the ESP32 using a connected SD card. 
+                You must have an SD card connected to the ESP32 SPI interface and 
+                be using a version of the firmware which expects an SD card.
+            </p>
+    
+            <h3>CLI/Flipper Zero</h3>
+            <p>
+                Ensure you follow the directions under <a href="#">SD Update</a> 
+                prior to using the following CLI/Flipper Zero command to update 
+                your Marauder firmware.
+            </p>
+            <p>
+                With the Wifi Marauder application open on your Flipper Zero, 
+                locate the <span class="code-block">Update</span> option and select.
+            </p>
+            <p>
+                If you followed the SD Update instructions properly, you will see 
+                a message indicating the firmware installation process has started, 
+                followed shortly after by a reboot message.
+            </p>
+    
+            <h3>Usage</h3>
+            <p><span class="code-block">update -s/</span></p>
+    
+            <ul>
+                <span class="code-block">-s :</span> <a href="#">SD Update</a></li>
+            </ul>
+        `;
+    
+        function showPopup(title, description) {
+            document.getElementById("popup-title").innerText = title;
+            document.getElementById("popup-description").innerHTML = description;
+            document.getElementById("popup").style.display = "flex";
+        }
+    </script>
+    
+    <style>
+        .code-block {
+            background-color: #003300;
+            color: #00ff00;
+            padding: 5px;
+            border-radius: 5px;
+            font-family: monospace;
+            display: inline-block;
+            margin: 5px 0;
+        }
+    </style>
+    
+
+    <p class="command" onclick="showPopup('wardrive', wardriveDescription)">wardrive</p>
+
+    <script>
+        const wardriveDescription = `
+            <p>
+                This function allows users to continuously scan for WiFi networks. 
+                Once a network is detected, the current position from the attached GPS module, 
+                along with the network information, is logged and saved to a file with the "wardrive" prefix to the SD card.
+                To exit the scan, simply tap the screen. Because of the method of scanning, 
+                it may take multiple taps to exit.
+            </p>
+            <p><strong>This function requires the <a href="#">GPS Modification</a>.</strong></p>
+    
+            <h3>CLI</h3>
+            <p>
+                This function is available for use via the <a href="#">Marauder CLI</a>.
+                The following documentation describes command usage. 
+                The wardrive function can be stopped with <a href="#">stopscan</a>.
+            </p>
+    
+            <h3>Usage</h3>
+            <p><span class="code-block">wardrive [-s]</span></p>
+    
+            <table>
+    <thead>
+        <tr>
+            <th>Argument</th>
+            <th>Required/Optional</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>-s</td>
+            <td>Optional</td>
+            <td>Wardrive for stations instead of access points</td>
+        </tr>
+    </tbody>
+</table>
+
+<style>
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        background-color: black;
+        color: #00ff00;
+        font-family: monospace;
+        text-align: left;
+    }
+    th, td {
+        border: 1px solid #00ff00;
+        padding: 8px;
+    }
+    th {
+        background-color: #003300;
+        font-weight: bold;
+    }
+</style>
+
+        `;
+    
+        function showPopup(title, description) {
+            document.getElementById("popup-title").innerText = title;
+            document.getElementById("popup-description").innerHTML = description;
+            document.getElementById("popup").style.display = "flex";
+        }
+    </script>
+    
+    <style>
+        .code-block {
+            background-color: #003300;
+            color: #00ff00;
+            padding: 5px;
+            border-radius: 5px;
+            font-family: monospace;
+            display: inline-block;
+            margin: 5px 0;
+        }
+    </style>
+    
+</div>
+
+
+
+<!-- ปุ่ม Guide -->
+<div id="guideButton" onclick="toggleGuide()" style="
+    position: fixed;
+    top: 50%;
+    right: 0;
+    width: 50px;
+    height: 50px;
+    background: #00ff00;
+    border: 2px solid #003300;
+    color: black;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: -2px 0 10px #00ff00;
+    border-radius: 50%;
+    transform: translate(50%, -50%);
+    transition: right 0.3s ease-in-out, opacity 0.3s;
+    z-index: 10000;
+">
+Guide
+</div>
+
+<!-- Popup Modal -->
+<div id="popup" class="popup">
+    <div class="popup-content">
+        <span class="close" onclick="closePopup()">&times;</span>
+        <h2 id="popup-title"></h2>
+        <p id="popup-description"></p>
+    </div>
+</div>
+
+
+<!-- CSS -->
+<style>
+    .command {
+        font-size: 16px;
+        line-height: 1.5;
+        margin: 5px 0;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+
+    .command:hover {
+        color: #00ff00;
+        text-decoration: underline;
+    }
+
+
+    .popup {
+        display: none;
+        position: fixed;
+        right: 260;
+        bottom: 0;
+        width: 250px; /* ความกว้างของ Popup */
+        height: 60vh; /* ความสูงของ Popup */
+        background-color: rgba(0, 0, 0, 0.95);
+        border-left: 2px solid #00ff00;
+        border-top: 2px solid #00ff00;
+        box-shadow: -2px 0 10px #00ff00;
+        text-align: center;
+        padding: 20px;
+        z-index: 2000;
+        overflow-y: auto;
+    }
+
+    .popup-content {
+        position: relative;
+        width: 100%;
+    }
+
+    .popup-content h2 {
+        margin-bottom: 10px;
+        color: #00ff00;
+        font-size: 20px;
+    }
+
+    .popup-content p {
+        font-size: 14px;
+        color: #00ff00;
+    }
+
+    .close {
+        position: absolute;
+        top: 10px;
+        right: 15px;
+        font-size: 20px;
+        cursor: pointer;
+        color: #00ff00;
+    }
+
+    .close:hover {
+        color: red;
+    }
+</style>
+
+<!-- JavaScript -->
+<script>
+    function showPopup(title, description) {
+        document.getElementById("popup-title").innerText = title;
+        document.getElementById("popup-description").innerHTML = description;
+        document.getElementById("popup").style.display = "flex";
+
+        // ซ่อนปุ่ม Guide
+        document.getElementById("guideButton").classList.add("hide-guide");
+
+        // ตั้งค่าให้ปิด Popup เมื่อกดปุ่ม ESC
+        document.addEventListener("keydown", escClose);
+    }
+
+    function closePopup() {
+        document.getElementById("popup").style.display = "none";
+
+        // แสดงปุ่ม Guide กลับมา
+        document.getElementById("guideButton").classList.remove("hide-guide");
+
+        // ลบ Event Listener ของ ESC หลังจากปิด Popup
+        document.removeEventListener("keydown", escClose);
+    }
+
+ // ฟังก์ชันปิด Popup เมื่อกดปุ่ม ESC
+function escClose(event) {
+    if (event.key === "Escape") { // ใช้ "Escape" แทนตัวเลข 27
+        closePopup();
+    }
+}
+
+// เพิ่ม event listener ให้สามารถปิด popup ด้วยปุ่ม ESC
+document.addEventListener("keydown", escClose);
+
+
+    // ปิด Popup เมื่อคลิกพื้นที่ว่างนอก Popup
+    document.getElementById("popup").addEventListener("click", function(event) {
+        if (event.target === this) {
+            closePopup();
+        }
+    });
+</script>
+
+
+<script>
+function toggleGuide() {
+var guideSidebar = document.getElementById("guideSidebar");
+var guideButton = document.getElementById("guideButton");
+
+if (guideSidebar.style.right === "0px") {
+    guideSidebar.style.right = "-300px"; // ซ่อน sidebar
+    guideButton.style.right = "0"; // ปรับปุ่มกลับมา
+} else {
+    guideSidebar.style.right = "0px"; // แสดง sidebar
+    guideButton.style.right = "300px"; // เลื่อนปุ่มไปพร้อมกัน
+}
+}
+</script>
+</body>
 </html>
+
